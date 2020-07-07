@@ -1,1 +1,0 @@
-/home/sam/work/ROSPro/obstacle_detector/devel/.private/my_robot/share/my_robot/cmake/my_robotConfig-version.cmake

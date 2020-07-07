@@ -1,8 +1,0 @@
-prefix=/usr/local
-
-Name: my_robot
-Description: Description of my_robot
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 
