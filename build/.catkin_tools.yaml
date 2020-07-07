@@ -1,6 +1,0 @@
-devel_space: /home/sam/work/ROSPro/obstacle_detector/devel
-install: false
-install_space: /home/sam/work/ROSPro/obstacle_detector/install
-profile: default
-source_space: /home/sam/work/ROSPro/obstacle_detector/src
-workspace: /home/sam/work/ROSPro/obstacle_detector
