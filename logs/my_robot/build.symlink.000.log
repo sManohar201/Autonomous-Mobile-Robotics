@@ -1,0 +1,3 @@
+Symlinking /home/sam/work/ROSPro/obstacle_detector/devel/lib/pkgconfig/my_robot.pc
+Symlinking /home/sam/work/ROSPro/obstacle_detector/devel/share/my_robot/cmake/my_robotConfig.cmake
+Symlinking /home/sam/work/ROSPro/obstacle_detector/devel/share/my_robot/cmake/my_robotConfig-version.cmake

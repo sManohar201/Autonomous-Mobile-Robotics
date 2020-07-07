@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/sam/work/ROSPro/obstacle_detector/devel/.private/my_robot/setup.sh

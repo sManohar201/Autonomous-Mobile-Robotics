@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/sam/work/ROSPro/obstacle_detector/build/devel/setup.sh

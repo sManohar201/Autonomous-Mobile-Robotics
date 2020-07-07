@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <arg name='sdf_gazebo' default='true' />
+    <arg name='uda' default='false' />
+    <!-- send urdf to param server  -->
+    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find my_robot)/urdf/vivaRob.xacro'" unless="$(arg sdf_gazebo)" />
+    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find my_robot)/urdf/my_robot.xacro'" unless="$(arg uda)" />
+
+    <!-- Send fake joint values-->
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <param name="use_gui" value="false"/>
+  </node>
+
+  <!-- Send robot states to tf -->
+      <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen"/>
+</launch>

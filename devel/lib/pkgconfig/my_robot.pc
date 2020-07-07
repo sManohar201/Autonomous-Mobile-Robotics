@@ -1,0 +1,1 @@
+/home/sam/work/ROSPro/obstacle_detector/devel/.private/my_robot/lib/pkgconfig/my_robot.pc
