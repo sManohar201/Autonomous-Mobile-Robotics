@@ -232,7 +232,7 @@
         </link>
 
         <joint type="fixed" name="hokuyo_joint_back">
-            <origin xyz="-0.15 0 0.1" rpy="0 0 3.14" />
+            <origin xyz="-0.15 0 0.1" rpy="0 0 0" />
             <parent link="chassis" />
             <child link="hokuyo_back" />
             <axis xyz="0 1 0" rpy="0 0 0" />
