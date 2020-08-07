@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/sam/work/RoboticsND/jackal/jackal_description/cmake-build-debug/devel/setup.sh

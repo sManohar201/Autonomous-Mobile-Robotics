@@ -1,0 +1,8 @@
+prefix=/usr/local
+
+Name: jackal_description
+Description: Description of jackal_description
+Version: 0.7.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
