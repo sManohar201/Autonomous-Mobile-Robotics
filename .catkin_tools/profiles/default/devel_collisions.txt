@@ -1,1 +1,2 @@
+/home/sam/work/Autonomous-Mobile-Robotics/devel/./cmake.lock 6
 /home/sam/work/ROSPro/obstacle_detector/devel/./cmake.lock 2
