@@ -3,3 +3,4 @@
 build
 devel
 logs
+src/sensor_sim_gazebo
