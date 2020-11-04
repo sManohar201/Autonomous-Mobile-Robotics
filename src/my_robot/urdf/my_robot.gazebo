@@ -96,5 +96,62 @@
     </sensor>
   </gazebo>
 
+  <gazebo> 
+    <plugin name="imu_plugin" filename="libgazebo_ros_imu.so"> 
+      <alwaysOn>true</alwaysOn> 
+      <frameName>robot_footprint</frameName>
+      <bodyName>imu_link</bodyName> 
+      <topicName>imu/data</topicName> 
+      <serviceName>imu_service</serviceName> 
+      <gaussianNoise>0.4</gaussianNoise>
+      <!-- <accelDrift>0.00 0.00 0.00</accelDrift>
+      <accelGaussianNoise>0.00 0.00 0.00</accelGaussianNoise>
+      <rateDrift>0.00 0.00 0.00 </rateDrift>
+      <rateGaussianNoise>0.00 0.00 0.00 </rateGaussianNoise>
+      <headingDrift>0.00</headingDrift>
+      <headingGaussianNoise>0.00</headingGaussianNoise> -->
+      <!-- <accelDrift>0.005 0.005 0.005</accelDrift>
+      <accelGaussianNoise>0.005 0.005 0.005</accelGaussianNoise>
+      <rateDrift>0.005 0.005 0.005 </rateDrift>
+      <rateGaussianNoise>0.005 0.005 0.005 </rateGaussianNoise>
+      <headingDrift>0.005</headingDrift>
+      <headingGaussianNoise>0.005</headingGaussianNoise>  -->
+      <updateRate>50.0</updateRate> 
+    </plugin> 
+  </gazebo> 
+
+  <!-- <gazebo>
+    <plugin name="gps_controller" filename="libhector_gazebo_ros_gps.so">
+      <updateRate>40</updateRate>
+      <bodyName>navsat_link</bodyName>
+      <frameId>robot_footprint</frameId>
+      <topicName>/navsat/fix</topicName>
+      <velocityTopicName>/navsat/vel</velocityTopicName>
+      <referenceLatitude>49.9</referenceLatitude>
+      <referenceLongitude>8.9</referenceLongitude>
+      <referenceHeading>0</referenceHeading>
+      <referenceAltitude>0</referenceAltitude>
+      <drift>0.0001 0.0001 0.0001</drift>
+    </plugin>
+  </gazebo> -->
+
+  <gazebo>
+            <plugin name="gazebo_ros_gps" filename="libhector_gazebo_ros_gps.so">
+                <updateRate>4.0</updateRate>
+                <bodyName>navsat_link</bodyName>
+                <frameId>robot_footprint</frameId>
+                <topicName>/gps/fix</topicName>
+                <velocityTopicName>/gps/fix_velocity</velocityTopicName>
+                <referenceLatitude>-30.06022459407145675</referenceLatitude>
+                <referenceLongitude>-51.173913575780311191</referenceLongitude>
+                <referenceHeading>90</referenceHeading>
+                <referenceAltitude>10</referenceAltitude>
+                <offset>0 0 0</offset>
+                <drift>0.001 0.001 0.001</drift>
+                <gaussianNoise>0.05 0.05 0.05</gaussianNoise>
+                <velocityDrift>0.001 0.001 0.001</velocityDrift>
+                <velocityGaussianNoise>0.5 0.5 0.5</velocityGaussianNoise>
+            </plugin>
+        </gazebo>
 
 </robot>
