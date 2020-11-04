@@ -1,4 +1,5 @@
-.catkin_tools
+.catkin_tools/profiles/default/devel_collisions.txt
+.catkin_tools/
 .vscode
 build
 devel
