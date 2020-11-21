@@ -1,0 +1,3 @@
+<launch>
+    <node name="occupancygrid_mapping_node" type="occupancygrid_mapping_node" pkg="occupancygrid_mapping"/>
+</launch>
