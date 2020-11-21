@@ -1,3 +1,9 @@
 <launch>
     <node name="occupancygrid_mapping_node" type="occupancygrid_mapping_node" pkg="occupancygrid_mapping"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_odom" args="0 0 0 0 0 0 map odom" />
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find turtlebot3_slam)/rviz/turtlebot3_gmapping.rviz"/>
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+            <param name="publish_frequency" type="double" value="50.0" />
+    </node>
 </launch>
