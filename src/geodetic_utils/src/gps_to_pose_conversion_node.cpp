@@ -67,10 +67,8 @@ void gps_callback(const sensor_msgs::NavSatFixConstPtr& msg)
   if (!g_geodetic_converter.isInitialised()) {
     ROS_WARN_STREAM_THROTTLE(1, "No GPS reference point set, not publishing");
     return;
-  } else {
-    ROS_INFO("geodetic_converter initialized");
-  }
-
+  } 
+  
   double x, y, z;
   g_geodetic_converter.geodetic2Enu(msg->latitude, msg->longitude, msg->altitude, &x, &y, &z);
 

@@ -21,6 +21,7 @@
 
   <!-- Launch other relevant files-->
   <include file="$(find my_robot)/launch/robot_description.launch"/>
+  <include file="$(find occupancygrid_mapping)/launch/occupancy_map.launch" />
 
   <!-- Spawn My Robot -->
    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" 
