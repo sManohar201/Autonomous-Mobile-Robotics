@@ -1,0 +1,10 @@
+<launch>
+    <!-- wakeup gps and set the reference position -->
+    <node name="set_gps_reference_node" type="set_gps_reference_node" pkg="geodetic_utils" args="3" output="screen" />
+
+    <!-- convert gps lat/lon position info to NED position information -->
+    <node name="gps_to_pose_conversion_node" type="gps_to_pose_conversion_node" pkg="geodetic_utils" output="screen" >
+        <param name="sim" type="bool" value="true"/>
+        <param name="frame_id" type="string" value="odom" />
+    </node>
+</launch>
