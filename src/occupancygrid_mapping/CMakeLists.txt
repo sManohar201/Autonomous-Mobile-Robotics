@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   sensor_msgs
+  tf2_ros
   nav_msgs
   std_msgs
 )
@@ -106,9 +107,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+   INCLUDE_DIRS include
 #  LIBRARIES occupancygrid_mapping
-#  CATKIN_DEPENDS laser_geometry roscpp rospy sensor_msgs std_msgs
+   CATKIN_DEPENDS laser_geometry roscpp rospy sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
 
@@ -119,7 +120,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -136,8 +137,8 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/laserProjection_node)
-
+add_executable(${PROJECT_NAME}_node src/laserProjection_node.cpp)
+add_executable(${PROJECT_NAME}_local_node src/fake_localizer_node.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -152,7 +153,9 @@ add_executable(${PROJECT_NAME}_node src/laserProjection_node)
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
 )
-
+target_link_libraries(${PROJECT_NAME}_local_node
+  ${catkin_LIBRARIES}
+)
 #############
 ## Install ##
 #############
