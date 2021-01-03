@@ -6,3 +6,9 @@ This repository contains ROS implementation of algorithms thought in the course 
 3. Localization
 4. Simultaneous Localization and Mapping
 5. Path Planning
+---
+#### TODO:
+- [ ] Robot and robot environment (turtlebot3 running instructions)
+- [ ] Differential drive kinematics documentation
+- [ ] 2D occupancy grid mapping and documentation (link package)
+- [ ] scan matching and ICP with relevant documentation (link package) 
