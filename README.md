@@ -2,8 +2,8 @@
 This repository contains ROS implementation of algorithms thought in the course [Autonomous Mobile Robots](https://www.edx.org/course/autonomous-mobile-robots).
 ---
 ### System requirements
-1. Ubuntu 16.04 LTS
-2. ROS Kinetic
+1. Ubuntu 18.04 LTS
+2. ROS Melodic
 ---
 ### List of topics covered in the course
 1. Perception
