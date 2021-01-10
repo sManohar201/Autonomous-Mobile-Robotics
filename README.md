@@ -6,8 +6,10 @@ This repository contains ROS implementation of algorithms thought in the course 
 2. ROS Melodic
 
 ### Installation steps
-`sudo apt-get install python-vcstool`
-`vcs-import < dependencies.yaml`
+
+- `sudo apt-get install python-vcstool` 
+
+- `vcs-import < dependencies.yaml`
 ---
 ### List of topics covered in the course
 1. Perception
