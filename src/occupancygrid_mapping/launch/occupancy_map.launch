@@ -1,12 +1,19 @@
 <launch>
-    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_odom" args="0 0 0 0 0 0 map odom" /> -->
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher"  
+                name="map_to_odom" args="0 0 0 0 0 0 map odom" > 
+                <param name="publish_frequency" type="double" value="50.0" />
+        </node> -->
+
     <node pkg="occupancygrid_mapping" name="occupancygrid_mapping_local_node" 
             type="occupancygrid_mapping_local_node" output="screen" />
-    <node pkg="occupancygrid_mapping" name="mapper" type="mapper.py" output="screen" />
+
+    <node pkg="occupancygrid_mapping" name="occupancygrid_mapping_map_node"
+                type="occupancygrid_mapping_map_node" output="screen" />
     <node pkg="rviz" type="rviz" name="rviz" required="true"
           args="-d $(find turtlebot3_slam)/rviz/turtlebot3_gmapping.rviz"/>
     
-    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <node pkg="robot_state_publisher" type="robot_state_publisher"
+                                                 name="robot_state_publisher">
             <param name="publish_frequency" type="double" value="50.0" />
     </node>
 </launch>
