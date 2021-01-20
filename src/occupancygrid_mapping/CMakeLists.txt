@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   std_msgs
   message_generation
+        rviz_visual_tools
 )
 
 ## System dependencies are found with CMake's conventions
@@ -111,7 +112,7 @@ generate_messages(
 catkin_package(
    INCLUDE_DIRS include
 #  LIBRARIES occupancygrid_mapping
-   CATKIN_DEPENDS laser_geometry roscpp rospy sensor_msgs std_msgs message_runtime
+   CATKIN_DEPENDS laser_geometry roscpp rospy sensor_msgs std_msgs message_runtime rviz_visual_tools
 #  DEPENDS system_lib
 )
 
