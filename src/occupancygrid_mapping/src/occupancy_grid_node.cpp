@@ -9,6 +9,7 @@
 #include <laser_geometry/laser_geometry.h>
 #include <tf/transform_listener.h>
 #include <boost/circular_buffer.hpp>
+
 // temporarily add geometry, navigation and sensor messages to the header file
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/LaserScan.h>
@@ -38,10 +39,15 @@ namespace occupancy_map {
         private:
             void scanCallback(const sm::LaserScan::ConstPtr &scan);
             void buildGrid(const ros::WallTimerEvent &event);
+            void initializeGrid();
 
             ros::NodeHandle nh_;
             const unsigned history_length_;
             const double resolution_;
+//            const u_int32_t height_;
+//            const u_int32_t width_;
+//            const double originX_;
+//            const double originY_;
             const string map_frame_;
             const string sensor_frame_;
             const double grid_construction_interval_;
@@ -49,11 +55,14 @@ namespace occupancy_map {
             tf::TransformListener tf_;
             ros::Subscriber scan_sub_;
             ros::Publisher grid_pub_;
+            ros::Publisher pcl_pub_;
             ros::WallTimer build_grid_timer_;
             boost::mutex mutex_;
 
             CloudBuffer clouds_;
             CloudConstPtr last_cloud_;
+
+            nm::OccupancyGrid final_grid_;
     };
 
     // define a function to return private parameters
@@ -66,13 +75,17 @@ namespace occupancy_map {
     }
 
     OccupancyGridNode::OccupancyGridNode () :
-        history_length_(getPrivateParam("history_length", 100)), resolution_(getPrivateParam("resolution", 0.1)),
+        history_length_(getPrivateParam("history_length", 4)), resolution_(getPrivateParam("resolution", 0.1)),
         map_frame_("map"), sensor_frame_("base_scan"), 
         grid_construction_interval_(getPrivateParam("grid_construction_interval", 0.3)),
-        scan_sub_(nh_.subscribe("scan", 1, &OccupancyGridNode::scanCallback, this)),
         grid_pub_(nh_.advertise<nm::OccupancyGrid>("final_gird", 1)),
+        pcl_pub_(nh_.advertise<sm::PointCloud>("pcl", 1)),
         build_grid_timer_(nh_.createWallTimer(ros::WallDuration(grid_construction_interval_), 
-                    &OccupancyGridNode::buildGrid, this)), clouds_(history_length_) {}
+                    &OccupancyGridNode::buildGrid, this)), clouds_(history_length_)
+         {
+             scan_sub_ = nh_.subscribe("scan", 1, &OccupancyGridNode::scanCallback, this);
+             initializeGrid();
+         }
     
     void OccupancyGridNode::scanCallback(const sm::LaserScan::ConstPtr &msg) {
         try {
@@ -87,7 +100,6 @@ namespace occupancy_map {
             gm::PoseStamped sensor_world_pose;
             sensor_world_pose.pose.orientation.w = 1.0;
             sensor_world_pose.header.frame_id = msg->header.frame_id;
-
             tf_.transformPose(map_frame_, sensor_world_pose, sensor_world_pose);
 
             // project scan message  from sensor frame to map frame
@@ -98,7 +110,8 @@ namespace occupancy_map {
             // another cloud point in the sensor frame
             sm::PointCloud sensor_frame_cloud;
             tf_.transformPointCloud(sensor_frame_, msg->header.stamp, map_frame_cloud, map_frame_, sensor_frame_cloud);
-
+            // publish the point clouds
+            pcl_pub_.publish(map_frame_cloud);
             // construct a localized cloud
             CloudPtr loc_cloud(new gu::LocalizedCloud());
             loc_cloud->cloud.points = sensor_frame_cloud.points;
@@ -111,32 +124,34 @@ namespace occupancy_map {
         }
     }
 
+    void OccupancyGridNode::initializeGrid() {
+        final_grid_.header.frame_id = this->map_frame_;
+        nm::MapMetaData info;
+        // get it from parameter server
+        info.origin.position.x = -4;
+        info.origin.position.y = -4;
+        info.origin.orientation = tf::createQuaternionMsgFromYaw(0.0);
+        info.resolution = resolution_;
+        // get it from parameter server
+        info.width = 80;
+        info.height = 80;
+        vector<signed char> dummy(80*80, -1);
+        final_grid_.info = info;
+        final_grid_.data = dummy;
+    }
+
     void OccupancyGridNode::buildGrid(const ros::WallTimerEvent &event) {
         if (last_cloud_) {
             {
                 Lock lock(mutex_);
                 clouds_.push_back(last_cloud_);
-
                 last_cloud_.reset();
             }
             ROS_DEBUG_NAMED("build_grid", "Building grid with the latest cloud points of total size: %zu", clouds_.size());
-            nm::MapMetaData info;
-            info.origin.position.x = -4;
-            info.origin.position.y = -4;
-            info.origin.orientation = tf::createQuaternionMsgFromYaw(0);
-            info.resolution = resolution_;
-            info.width = 80;
-            info.height = 80;
-            nm::OccupancyGrid fake_grid;
-            fake_grid.header.stamp = ros::Time::now();
-            fake_grid.header.frame_id = map_frame_;
-            vector<signed char> dummy(80*80, -1);
-            dummy[0] = 100;
-            
-            fake_grid.data = dummy; 
-            fake_grid.info = info;
+
+            final_grid_.header.stamp = ros::Time::now();
             ROS_DEBUG_NAMED ("build_grid", "Done building grid");
-            grid_pub_.publish(fake_grid);
+            grid_pub_.publish(final_grid_);
         }
     }
 } // namespace occupancy_map
