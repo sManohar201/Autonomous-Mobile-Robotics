@@ -4,14 +4,15 @@
                 <param name="publish_frequency" type="double" value="50.0" />
         </node> -->
 
-    <node pkg="occupancygrid_mapping" name="occupancygrid_mapping_local_node" 
+    <node pkg="occupancygrid_mapping" name="occupancygrid_mapping_local_node"
             type="occupancygrid_mapping_local_node" output="screen" />
 
-    <node pkg="occupancygrid_mapping" name="occupancygrid_mapping_node"
-          type="occupancygrid_mapping_node" output="screen" />
+<!--    <node pkg="occupancygrid_mapping" name="occupancygrid_mapping_node"-->
+<!--          type="occupancygrid_mapping_node" output="screen" />-->
 
-<!--    <node pkg="occupancygrid_mapping" name="occupancygrid_mapping_map_node"-->
-<!--                type="occupancygrid_mapping_map_node" output="screen" />-->
+    <node pkg="occupancygrid_mapping" name="occupancygrid_mapping_map_node"
+                type="occupancygrid_mapping_map_node" output="screen" />
+
     <node pkg="rviz" type="rviz" name="rviz" required="true"
           args="-d $(find turtlebot3_slam)/rviz/turtlebot3_gmapping.rviz"/>
     
