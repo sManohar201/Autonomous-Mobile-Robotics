@@ -4,6 +4,8 @@
 #include <sensor_msgs/PointCloud.h>
 #include <tf/transform_listener.h>
 #include <rviz_visual_tools/rviz_visual_tools.h>
+#include "occupancygrid_mapping/ray_tracing.h"
+#include <cmath>
 
 namespace sm=sensor_msgs;
 namespace rvizT=rviz_visual_tools;
@@ -28,6 +30,8 @@ public:
         scan_sub_ = nh_.subscribe("scan", 1, &LaserProject::callBack, this);
     }
     void callBack(const sm::LaserScan::ConstPtr &scan_in) {
+        // delete the previous markers
+        visual_tools_->deleteAllMarkers();
         sm::PointCloud pcl_points;
         if (!sensor_to_map_.waitForTransform(fixed_frame_, sensor_frame_,
                                              scan_in->header.stamp + ros::Duration().fromSec(scan_in->ranges.size()*scan_in->time_increment),
@@ -35,16 +39,27 @@ public:
             ROS_WARN_STREAM("timed out waiting for transform at time " << scan_in->header.stamp);
             return;
         }
+        geometry_msgs::PoseStamped sensor_in_map_frame;
+        sensor_in_map_frame.header.frame_id = scan_in->header.frame_id;
+        sensor_in_map_frame.pose.orientation.w = 1.0;
+        sensor_to_map_.transformPose(fixed_frame_, sensor_in_map_frame, sensor_in_map_frame);
+        geometry_msgs::Point point = sensor_in_map_frame.pose.position;
+//         ROS_INFO_STREAM("Position of laser scan in the world -- x : "<<point.x<<" y : "<<point.y<<" z : "<<point.z);
+
         projection_.transformLaserScanToPointCloud(fixed_frame_, *scan_in, pcl_points, sensor_to_map_);
-//        ROS_INFO_STREAM("Info on Laser --> Laser scan size : " << scan_in->ranges.size());
-//        ROS_INFO_STREAM("Info on pcl -> Pcl point size : " << pcl_points.points[0] << " Pcl channel size : " << pcl_points.channels.size());
+        // round the values of sensor pose
+        // create a vector pair to get the traced
+        vecPair result;
+        findRay(ceil(point.x), ceil(point.y), ceil(pcl_points.points[4].x), ceil(pcl_points.points[4].y), result);
+        ROS_INFO_STREAM("Size of result : "<<result.size());
+        for(auto ele : pcl_points.points) {
+            sendMarker(ele.x, ele.y);
+        }
         pcl_pub_.publish(pcl_points);
-        sendMarker(pcl_points.points[4].x, pcl_points.points[4].y);
         return;
     }
 
     void sendMarker(float &x_loc, float &y_loc) {
-        visual_tools_->deleteAllMarkers();
         Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
         pose.translation().x() = x_loc;
         pose.translation().y() = y_loc;
