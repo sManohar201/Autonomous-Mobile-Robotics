@@ -10,3 +10,9 @@ src/sensor_sim_gazebo
 src/turtlebot3
 src/turtlebot3_msgs
 src/turtlebot3_simulations
+
+src/localization/.idea/
+src/localization/cmake-build-debug/
+
+frames.gv
+frames.pdf
