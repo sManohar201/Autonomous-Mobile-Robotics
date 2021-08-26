@@ -5,9 +5,6 @@ build
 devel
 logs
 src/sensor_sim_gazebo
-src/turtlebot3
-src/turtlebot3_msgs
-src/turtlebot3_simulations
 
 frames.gv
 frames.pdf
