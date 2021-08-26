@@ -1,8 +1,6 @@
 .catkin_tools/profiles/default/devel_collisions.txt
 .catkin_tools/
 .vscode
-src/.idea
-src/occupancygrid_mapping/cmake-build-debug/
 build
 devel
 logs
@@ -11,8 +9,8 @@ src/turtlebot3
 src/turtlebot3_msgs
 src/turtlebot3_simulations
 
-src/localization/.idea/
-src/localization/cmake-build-debug/
-
 frames.gv
 frames.pdf
+
+.idea/
+cmake-build-debug/
