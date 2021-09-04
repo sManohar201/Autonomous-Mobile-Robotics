@@ -7,16 +7,35 @@
         </plugin>
     </gazebo>
 
-    <gazebo reference="jackal">
+    <gazebo reference="automaton">
       <static>false</static>
     </gazebo>
 
+    
     <gazebo reference="chassis_link">
         <material>
-            Gazebo/Yellow 
+            Gazebo/Red
         </material>
         <turnGravityOff>false</turnGravityOff>
     </gazebo>
 
-
+    <gazebo reference="imu_link">
+      <turnGravityOff>false</turnGravityOff>
+    </gazebo>
+    
+    <gazebo>
+      <plugin name="imu_controller" filename="libhector_gazebo_ros_imu.so">
+        <robotNamespace>/</robotNamespace>
+        <updateRate>50.0</updateRate>
+        <bodyName>imu_link</bodyName>
+        <topicName>imu/data</topicName>
+        <accelDrift>0.005 0.005 0.005</accelDrift>
+        <accelGaussianNoise>0.005 0.005 0.005</accelGaussianNoise>
+        <rateDrift>0.005 0.005 0.005 </rateDrift>
+        <rateGaussianNoise>0.005 0.005 0.005 </rateGaussianNoise>
+        <headingDrift>0.005</headingDrift>
+        <headingGaussianNoise>0.005</headingGaussianNoise>
+      </plugin>
+    </gazebo>
+   
 </robot>
