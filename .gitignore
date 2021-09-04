@@ -1,13 +1,10 @@
 .catkin_tools/profiles/default/devel_collisions.txt
 .catkin_tools/
+.catkin_workspace
 .vscode
 build
 devel
 logs
 src/sensor_sim_gazebo
 
-frames.gv
-frames.pdf
-
 .idea/
-cmake-build-debug/
