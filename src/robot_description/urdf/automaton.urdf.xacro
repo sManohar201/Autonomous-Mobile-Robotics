@@ -25,8 +25,8 @@
     <material name="light_grey">
         <color rgba="0.4 0.4 0.4 1.0"/>
     </material>
-    <material name="yellow">
-        <color rgba="0.8 0.8 0.0 1.0"/>
+    <material name="Red">
+        <color rgba="0.8 0 0.0 1.0"/>
     </material>
     <material name="black">
         <color rgba="0.15 0.15 0.15 1.0"/>
@@ -97,7 +97,7 @@
             <geometry>
                 <mesh filename="package://robot_description/meshes/base.stl"/> 
             </geometry>
-            <material name="yellow" />
+            <material name="Red" />
         </visual>
         <collision>
             <origin xyz="0.0 0.0 ${chassis_height/2}" rpy="0.0 0.0 0.0"/>
@@ -124,6 +124,20 @@
     <xacro:wheel prefix="rear_right">
         <origin xyz="${-wheel_base/2} ${-track_width/2} ${wheel_vertical_offset}" rpy="0.0 0.0 0.0"/>
     </xacro:wheel>
+
+    <link name="imu_link">
+      <interial>
+        <mass value="0.001"/>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <inertia ixx="${dummy_inertia}" ixy="0.0" ixz="0.0" iyy="${dummy_inertia}" iyz="0.0" izz="${dummy_inertia}"/>
+      </interial>
+    </link>
+    <joint name="imu_joint" type="fixed">
+      <parent link="chassis_link"/>
+      <child link="imu_link"/>
+    </joint>
+  
+    
 
     <xacro:include filename="$(find robot_description)/urdf/automaton.gazebo" />
     
