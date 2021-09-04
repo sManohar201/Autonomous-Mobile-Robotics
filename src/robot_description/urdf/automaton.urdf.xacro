@@ -151,10 +151,11 @@
     <joint name="rear_mount_joint" type="fixed">
       <parent link="chassis_link"/>
       <child link="rear_mount"/>
-      <origin xyz="${-chassis_length/2.2} 0.0 ${chassis_height}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="${-chassis_length/2.2} 0.0 ${chassis_height}" rpy="0.0 0.0 ${-PI}"/>
     </joint>
 
-    <xacro:hokuyo_ust10 prefix="front" mount="front_mount"/>
+    <xacro:hokuyo_ust10 prefix="front" mount="front_mount" />
+    <xacro:hokuyo_ust10 prefix="rear" mount="rear_mount" />
      
     
 </robot>
