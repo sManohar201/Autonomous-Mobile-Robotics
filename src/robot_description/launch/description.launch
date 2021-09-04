@@ -1,0 +1,20 @@
+<launch>
+
+  <arg name="model" default="$(find robot_description)/urdf/automaton.urdf.xacro" />
+
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" output="screen">
+    <param name="use_gui" value="TRUE"/>
+  </node>
+
+  <node name="robot_state_publihser" pkg="robot_state_publisher" type="robot_state_publisher" output="screen" />
+
+  <node name="rviz" pkg="rviz" type="rviz" 
+        args="-d $(find robot_description)rviz_config/urdf.rviz" />
+
+  <rosparam command="load" file="$(find robot_description)/config/control.yaml"/>
+
+  <node name="automaton_controller_manager" pkg="controller_manager" type="spawner" args="automaton_joint_publisher automaton_velocity_controller" />
+
+</launch>
