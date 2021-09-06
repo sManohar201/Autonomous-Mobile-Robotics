@@ -7,9 +7,11 @@ This repository contains ROS implementation of algorithms thought in the course 
 
 ### Installation steps
 
+- `sudo apt-get install ros-noetic-hector*`
 - `git clone git@github.com:sManohar201/Autonomous-Mobile-Robotics.git`
 - `cd Autonomous-Mobile-Robotics`
 - `catkin_make` or `catkin build`
+- `source devel/setup.bash`
 
 ---
 ### List of topics covered in the course
@@ -18,9 +20,3 @@ This repository contains ROS implementation of algorithms thought in the course 
 3. Localization
 4. Simultaneous Localization and Mapping
 5. Path Planning
----
-#### TODO:
-- [ ] Add custom built skid drive robot add documentation 
-- [ ] Differential drive kinematics documentation
-- [ ] 2D occupancy grid mapping and documentation (link package)
-- [ ] scan matching and ICP with relevant documentation (link package) 
