@@ -1,10 +1,13 @@
+# permanent file to ignore
 .catkin_tools/profiles/default/devel_collisions.txt
 .catkin_tools/
 .catkin_workspace
 .vscode
+# ros build files 
 build
 devel
 logs
-src/sensor_sim_gazebo
 
-.idea/
+# temporary files
+rosgraph.png
+rosgraph_ref.png
