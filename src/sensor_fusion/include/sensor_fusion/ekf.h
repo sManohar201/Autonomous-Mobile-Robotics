@@ -1,7 +1,7 @@
 #ifdef SENSOR_FUSION_EKF_H 
 #define SENSOR_FUSION_EKF_H 
 
-#include "robot_localization/filter_base.h"
+#include "sensor_fusion/filter_base.h"
 
 #include <fstream>
 #include <vector>
