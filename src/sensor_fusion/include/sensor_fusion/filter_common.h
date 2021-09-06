@@ -31,7 +31,6 @@ namespace SensorFusion {
    */
   // TODO: what exactly this is used for
   enum ControlMembers {
-   ControlMemberYaw,
     ControlMemberVx,
     ControlMemberVy,
     ControlMemberVz,
