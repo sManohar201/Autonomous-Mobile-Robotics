@@ -1,4 +1,4 @@
-#ifdef SENSOR_FUSION_EKF_H 
+#ifndef SENSOR_FUSION_EKF_H 
 #define SENSOR_FUSION_EKF_H 
 
 #include "sensor_fusion/filter_base.h"
