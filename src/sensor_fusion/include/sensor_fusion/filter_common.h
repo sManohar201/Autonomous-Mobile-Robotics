@@ -37,7 +37,7 @@ namespace SensorFusion {
     ControlMemberVroll,
     ControlMemberVpitch,
     ControlMemberVyaw
-  }
+  };
   /**
    * @brief Global constants that define our state
    * vector size and offsets to groups of values
