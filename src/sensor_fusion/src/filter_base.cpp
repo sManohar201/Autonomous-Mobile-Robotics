@@ -196,7 +196,10 @@ namespace SensorFusion {
     }
   }
 
-
+  void FilterBase::setControl(const Eigen::VectorXd &control, const double controlTime) {
+    latestControl_ = control;
+    latest
+  }
   void FilterBase::validateDelta(double &delta) {
     // this handles issues with ROS time when use_sim_time is on and we're playing from bags.
     if (delta > 100000.0) {
