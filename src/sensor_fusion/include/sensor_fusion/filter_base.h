@@ -216,6 +216,37 @@ namespace SensorFusion {
        */
       virtual void processMeasurement(const Measurement &measurement);
       /**
+       * @brief Sets the recent control term
+       * 
+       * @param control - The control term to be applied
+       * @param controlTime - The time at which the control in question was received
+       */
+      void setControl(const Eigen::VectorXd &control, const double controlTime);
+      /**
+       * @brief Sets the control update vector and acceleration limits
+       * 
+       * @param[in] updateVector - The values the control term affects.
+       * @param[in] controlTimeout - Timeout value, in seconds, after which a control is considered
+       * @param[in] accelerationLimits - The acceleration limits for the control variables
+       * @param[in] accelerationGains - Gains applied to the control term-derived acceleration.
+       * @param[in] decelerationLimits - The deceleration limits for the control variables
+       * @param[in] decelerationGains - Gains applied to the control term-derived decelerations.
+       */
+      // TODO: Why do you need acceleration and deceleration gains?
+      void setControlParams(const std::vector<int> &updateVector, const double controlTimeout, 
+              const std::vector<double> &accelerationLimits, const std::vector<double> &accelerationGains,
+              const std::vector<double> &decelerationLimits, const std::vector<double> &decelerationGains);
+      /**
+       * @brief Set the filter into debug mode.
+       *  NOTE: this will generate a lot of debug output to the provided stream.
+       * The value must be a pointer to a valid ostream oubject. 
+       * @param[in] debug - Whether or not to place the filter in debug mode.
+       * @param[in] outStream - If debug is true, then this must have a valid pointer.
+       * If the pointer is invalid, the filter will not enter debug mode. If debug is false, outStream
+       * is ignored.
+       */
+      void setDebug(const bool debug, std::ostream *outStream = nullptr);
+      /**
        * @brief Ensures a given time delta is valid (helps with bag file playback issues)
        * 
        * @param delta - The time delta, in seconds, to validate.
@@ -273,6 +304,10 @@ namespace SensorFusion {
        */
       std::vector<double> accelerationLimits_;
       /**
+       * @brief Gains applied to deceleration derived from control term.
+       */
+      std::vector<double> decelerationGains_;
+      /**
        * @brief Caps the deceleration we apply from control input
        */
       std::vector<double> decelerationLimits_;
@@ -284,7 +319,7 @@ namespace SensorFusion {
       /**
        * @brief latest control term.
        */
-      Eigen::VectorXd lastestControl_;
+      Eigen::VectorXd latestControl_;
       /**
        * @brief Holds the last predicted state of the filter
        */
