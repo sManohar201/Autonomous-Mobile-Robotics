@@ -115,7 +115,6 @@ namespace SensorFusion {
       virtual ~FilterBase();
       /**
        * @brief Resets filter to its unintialized state
-       * 
        */
       void reset();
       /**
@@ -161,6 +160,67 @@ namespace SensorFusion {
        * @return const Eigen::MatrixXd& 
        */
       const Eigen::MatrixXd& getEstimateErrorCovariance();
+      /**
+       * @brief Get the filter's Initialized Status 
+       * 
+       * @return true - A copy of the estimate error covariance matrix 
+       */
+      bool getInitializedStatus();
+      /**
+       * @brief Get the most recent Measurement Time 
+       * 
+       * @return double - The time at which we last received a measurement. 
+       */
+      double getLastMeasurementTime();
+      /**
+       * @brief Get the filter's Predicted State,
+       * the state estimate before correct() is called. 
+       * 
+       * @return const Eigen::VectorXd& - Constant reference to the 
+       * predicted state. 
+       */
+      const Eigen::VectorXd& getPredictedState();
+      /**
+       * @brief Get the filter's Process Noise Covariance
+       * 
+       * @return const Eigen::MatrixXd& - const reference to the process 
+       * noise covariance.
+       */
+      const Eigen::MatrixXd& getProcessNoiseCovariance();
+      /**
+       * @brief Get the Sensor Timeout value (in seconds) 
+       * 
+       * @return double - the sensor timeout value 
+       */
+      double getSensorTimeout();
+      /**
+       * @brief Get the filter State. 
+       * 
+       * @return const Eigen::VectorXd&  - a const reference to the 
+       * current state.
+       */
+      const Eigen::VectorXd& getState();
+      /**
+       * @brief Carries out the predict step in the predict/correct cycle.
+       * Projects the state and error matrices forward using a model of 
+       * the vehicle's motion. This method must be implemented by subclasses.
+       * 
+       * @param[in] referenceTime - The time at which the prediction is being made.
+       * @param[in] delta  - the time step over which to predict.
+       */
+      virtual void predict(const double referenceTime, const double delta) = 0;
+      /**
+       * @brief Does some final preprocessing, carries out the predict/update cycle
+       * 
+       * @param[in] measurement - The measurement object to fuse into the filter.
+       */
+      virtual void processMeasurement(const Measurement &measurement);
+      /**
+       * @brief Ensures a given time delta is valid (helps with bag file playback issues)
+       * 
+       * @param delta - The time delta, in seconds, to validate.
+       */
+      void validateDelta(double &delta);
       /**
        * @brief Whether or not we've received any measurements.
        */
@@ -228,7 +288,7 @@ namespace SensorFusion {
       /**
        * @brief Holds the last predicted state of the filter
        */
-      Eigen::VectorXd predictState_;
+      Eigen::VectorXd predictedState_;
       /**
        * @brief This is the robot's state vector, which is what we are trying to
        * filter. the values in this vector are what get reported by the node.
