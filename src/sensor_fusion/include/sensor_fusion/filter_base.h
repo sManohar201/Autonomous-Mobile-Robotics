@@ -274,6 +274,18 @@ namespace SensorFusion {
        */
       void setProcessNoiseCovariance(const Eigen::MatrixXd &processNoiseCovariance);
       /**
+       * @brief Set the Sensor Timeout.
+       * 
+       * @param[in] sensorTimeout - The time for a sensor mesurement, in seconds, to be considered having timed out.
+       */
+      void setSensorTimeout(const double sensorTimeout);
+      /**
+       * @brief Set the filter's State manually
+       * 
+       * @param[in] state - The state to set as the filter's current state
+       */
+      void setState(const Eigen::VectorXd &state);
+      /**
        * @brief Ensures a given time delta is valid (helps with bag file playback issues)
        * 
        * @param delta - The time delta, in seconds, to validate.
