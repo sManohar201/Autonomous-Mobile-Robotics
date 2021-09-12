@@ -291,6 +291,47 @@ namespace SensorFusion {
        * @param delta - The time delta, in seconds, to validate.
        */
       void validateDelta(double &delta);
+    protected:
+      /**
+       * @brief Method for setting bounds on acceleration values derived from controls
+       * 
+       * @param[in] state - the current state variable (e.g., linear X velocity).
+       * @param[in] control - the current control commanded velocity corresponding to the state variable.
+       * @param[in] accelerationLimit - limit for acceleration (regardless of driving directions).
+       * @param[in] accelerationGain - gain applied to acceleration control error.
+       * @param[in] decelerationLimit - limit for deceleration (moving towards zero, regardless of driving direction).
+       * @param[in] decelerationGain - gain applied to deceleration control error 
+       * @return double - a usuable acceleration estimate for the control vector.
+       */
+      inline double computeControlAcceleration(const double state, const double control, const double accelerationLimit, 
+              const double accelerationGain, const double decelerationLimit, const double decelerationGain) {
+        FB_DEBUG("---------- FilterBase::computeControlAcceleration -------------\n");
+        const double error = control - state;
+        const bool sameSign = (::fabs(error) <= ::fabs(control) + 0.01);
+        const double setPoint = (sameSign ? control : 0.0);
+        const bool decelerating = ::fabs(setPoint) < ::fabs(state);
+        double limit = accelerationLimit;
+        double gain = accelerationGain;
+
+        if (decelerating) {
+          limit = decelerationLimit;
+          gain = decelerationGain;
+        }
+
+        const double finalAcceleration = std::min(std::max(gain*error, -limit), limit);
+        
+        FB_DEBUG("Control value: " << control << "\n" <<
+               "State value: " << state << "\n" <<
+               "Error: " << error << "\n" <<
+               "Same sign: " << (sameSign ? "true" : "false") << "\n" <<
+               "Set point: " << setPoint << "\n" <<
+               "Decelerating: " << (decelerating ? "true" : "false") << "\n" <<
+               "Limit: " << limit << "\n" <<
+               "Gain: " << gain << "\n" <<
+               "Final is " << finalAcceleration << "\n");
+        
+        return finalAcceleration;
+      }
       /**
        * @brief Whether or not we've received any measurements.
        */
