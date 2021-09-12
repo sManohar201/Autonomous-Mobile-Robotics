@@ -252,10 +252,51 @@ namespace SensorFusion {
   }
 
   void FilterBase::validateDelta(double &delta) {
-    // this handles issues with ROS time when use_sim_time is on and we're playing from bags.
-    if (delta > 100000.0) {
-      FB_DEBUG("Delta was very large. Suspect playing from bag file. Setting to 0.01\n");
-      delta = 0.01;
+      // this handles issues with ROS time when use_sim_time is on and we're playing from bags.
+      if (delta > 100000.0) {
+        FB_DEBUG("Delta was very large. Suspect playing from bag file. Setting to 0.01\n");
+        delta = 0.01;
+      }
+  }
+
+  void FilterBase::prepareControl(const double referenceTime, const double predictionDelta) {
+    controlAcceleration_.setZero();
+    if (useControl_) {
+      bool timedOut = ::fabs(referenceTime - latestControlTime_) >= controlTimeout_;
+      if (timedOut) {
+        FB_DEBUG("Control timed out. Reference time was " << referenceTime << ", latest control time was " << 
+            latestControlTime_ << ", control timeout was " << controlTimeout_ << "\n");
+      }
+      for (size_t controlInd = 0; controlInd < TWIST_SIZE; controlInd++) {
+        if (controlUpdateVector_[controlInd]) {
+          controlAcceleration_(controlInd) = computeControlAcceleration(state_(controlInd+POSITION_V_OFFSET), 
+                  (timedOut ? 0.0 : latestControl_(controlInd)), accelerationLimits_[controlInd], accelerationGains_[controlInd], 
+                  decelerationLimits_[controlInd], decelerationGains_[controlInd]);
+        }
+      }
     }
   }
-}
+
+  void FilterBase::wrapStateAngles() {
+    state_(StateMemberRoll) = FilterUtilities::clampRotation(state_(StateMemberRoll));
+    state_(StateMemberPitch) = FilterUtilities::clampRotation(state_(StateMemberPitch));
+    state_(StateMemberYaw) = FilterUtilities::clampRotation(state_(StateMemberYaw));
+  }
+
+  bool FilterBase::checkMahalanobisThreshold(const Eigen::VectorXd &innovation,
+                                              const Eigen::MatrixXd &invCovariance,
+                                                const double nsigmas) {
+    double sqMahalanobis = innovation.dot(invCovariance * innovation);
+    double threshold = nsigmas * nsigmas;
+
+    if (sqMahalanobis >= threshold) {
+      FB_DEBUG("Innovation mahalanobis distance test failed. Squared mahalanobis is : " << sqMahalanobis << "\n" << 
+                "Threshold is : " << threshold << "\n" << 
+                "Innovation is : " << innovation << "\n" <<
+                "Innovation covariance is : \n" << invCovariance << "\n");
+      return false;
+    }
+    return true;
+  }
+
+} // namespace SensorFusion

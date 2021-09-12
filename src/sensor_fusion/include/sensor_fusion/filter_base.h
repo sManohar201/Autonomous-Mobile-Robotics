@@ -291,6 +291,7 @@ namespace SensorFusion {
        * @param delta - The time delta, in seconds, to validate.
        */
       void validateDelta(double &delta);
+
     protected:
       /**
        * @brief Method for setting bounds on acceleration values derived from controls
@@ -306,6 +307,7 @@ namespace SensorFusion {
       inline double computeControlAcceleration(const double state, const double control, const double accelerationLimit, 
               const double accelerationGain, const double decelerationLimit, const double decelerationGain) {
         FB_DEBUG("---------- FilterBase::computeControlAcceleration -------------\n");
+        // TODO: change this to two if conditionals to check if you need to accelerate or decelerate the robot.
         const double error = control - state;
         const bool sameSign = (::fabs(error) <= ::fabs(control) + 0.01);
         const double setPoint = (sameSign ? control : 0.0);
@@ -332,6 +334,31 @@ namespace SensorFusion {
         
         return finalAcceleration;
       }
+
+      /**
+       * @brief Converts the control term to an acceleration to be applied in the prediction step
+       *        * 
+       * @param[in] referenceTime - the time of the update (measurement used in the prediction step)
+       * @param[in] predictionDelta - the amount of time over which we are carrying out our prediction.
+       */
+      void prepareControl(const double referenceTime, const double predictionDelta);
+
+      /**
+       * @brief Keeps the state euler angles in the range [-pi, pi].
+       */
+      virtual void wrapStateAngles();
+
+      /**
+       * @brief Tests if innovation is within N-sigmas of covariance. 
+       * 
+       * @param[in] innovation - the difference between the measurement and the state
+       * @param[in] invCovariance - the innovation error
+       * @param[in] nsigmas - number of standard deviations that are considered acceptable
+       * @return  - Returns true if passed the test.
+       */
+      virtual bool checkMahalanobisThreshold(const Eigen::VectorXd &innovation,
+                                            const Eigen::MatrixXd &invCovariance,
+                                            const double nsigmas);
       /**
        * @brief Whether or not we've received any measurements.
        */
