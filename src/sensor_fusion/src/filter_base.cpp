@@ -242,6 +242,14 @@ namespace SensorFusion {
     processNoiseCovariance_ = processNoiseCovariance;
     dynamicProcessNoiseCovariance_ = processNoiseCovariance_;
   }
+  
+  void FilterBase::setSensorTimeout(const double sensorTimeout) {
+    sensorTimeout_ = sensorTimeout;
+  }
+
+  void FilterBase::setState(const Eigen::VectorXd &state) {
+    state_ = state;
+  }
 
   void FilterBase::validateDelta(double &delta) {
     // this handles issues with ROS time when use_sim_time is on and we're playing from bags.
