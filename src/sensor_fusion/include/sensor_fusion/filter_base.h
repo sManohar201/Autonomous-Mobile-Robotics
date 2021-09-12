@@ -247,6 +247,33 @@ namespace SensorFusion {
        */
       void setDebug(const bool debug, std::ostream *outStream = nullptr);
       /**
+       * @brief enable Dynamic Process Noise Covariance  calculation
+       * 
+       * @param[in] dynamicProcessNoiseCovariance - whether or not to compute dynamic process noise covariance matrices.
+       */
+      void setUseDynamicProcessNoiseCovariance(const bool dynamicProcessNoiseCovariance);
+      /**
+       * @brief Set the Estimate Error Covariance 
+       * 
+       * @param[in] estimateErrorCovariance - the state to set as the filter's current state. 
+       */
+      void setEstimateErrorCovariance(const Eigen::MatrixXd &estimateErrorCovariance);
+      /**
+       * @brief Set the Last Measurement Time 
+       * 
+       * @param[in] lastMeasurementTime - the last measurement time of the filter
+       */
+      void setLastMeasurementTime(const double lastMeasurementTime);
+      /**
+       * @brief Set the Process Noise Covariance
+       * This enables external initialization, which is important, as this 
+       * matrix can be difficult to tune for a given implementation.
+       * 
+       * @param[in] processNoiseCovariance - The STATE_SIZE X STATE_SIZE process noise covariance matrix
+       * to use for the filter.
+       */
+      void setProcessNoiseCovariance(const Eigen::MatrixXd &processNoiseCovariance);
+      /**
        * @brief Ensures a given time delta is valid (helps with bag file playback issues)
        * 
        * @param delta - The time delta, in seconds, to validate.

@@ -23,7 +23,7 @@ namespace SensorFusion {
     accelerationLimits_(TWIST_SIZE, 0.0),
     decelerationLimits_(TWIST_SIZE, 0.0),
     controlAcceleration_(TWIST_SIZE),
-    lastestControl_(TWIST_SIZE),
+    latestControl_(TWIST_SIZE),
     predictedState_(STATE_SIZE),
     state_(STATE_SIZE),
     covarianceEpsilon_(STATE_SIZE, STATE_SIZE),
@@ -113,7 +113,7 @@ namespace SensorFusion {
   }
 
   const Eigen::VectorXd& FilterBase::getControl() {
-    return lastestControl_;
+    return latestControl_;
   }
 
   double FilterBase::getControlTime() {
@@ -198,8 +198,51 @@ namespace SensorFusion {
 
   void FilterBase::setControl(const Eigen::VectorXd &control, const double controlTime) {
     latestControl_ = control;
-    latest
+    latestControlTime_ = controlTime;
   }
+
+  void FilterBase::setControlParams(const std::vector<int>& updateVector, const double controlTimeout,
+      const std::vector<double> &accelerationLimits, const std::vector<double> &accelerationGains,
+      const std::vector<double> &decelerationLimits, const std::vector<double> &decelerationGains) {
+        useControl_ = true;
+        controlTimeout_ = controlTimeout;
+        controlUpdateVector_ = updateVector;
+        accelerationLimits_ = accelerationLimits;
+        accelerationGains_ = accelerationGains;
+        decelerationLimits_ = decelerationLimits;
+        decelerationGains_ = decelerationGains;
+      }
+
+  void FilterBase::setDebug(const bool debug, std::ostream *outStream) {
+    if (debug) {
+      if (outStream != nullptr) {
+        debugStream_ = outStream;
+        debug_ = true;
+      } else {
+        debug_ = false;
+      }
+    } else {
+      debug_ = false;
+    }
+  }
+
+  void FilterBase::setUseDynamicProcessNoiseCovariance(const bool useDynamicProcessNoiseCovariance) {
+    useDynamicProcessNoiseCovariance_ = useDynamicProcessNoiseCovariance; 
+  }
+
+  void FilterBase::setEstimateErrorCovariance(const Eigen::MatrixXd &estimateErrorCovariance) {
+    estimateErrorCovariance_ = estimateErrorCovariance;
+  }
+
+  void FilterBase::setLastMeasurementTime(const double lastMeasurementTime) {
+    lastMeasurementTime_ = lastMeasurementTime;
+  }
+
+  void FilterBase::setProcessNoiseCovariance(const Eigen::MatrixXd &processNoiseCovariance) {
+    processNoiseCovariance_ = processNoiseCovariance;
+    dynamicProcessNoiseCovariance_ = processNoiseCovariance_;
+  }
+
   void FilterBase::validateDelta(double &delta) {
     // this handles issues with ROS time when use_sim_time is on and we're playing from bags.
     if (delta > 100000.0) {
