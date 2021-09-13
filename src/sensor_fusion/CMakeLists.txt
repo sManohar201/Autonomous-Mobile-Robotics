@@ -8,11 +8,40 @@ project(sensor_fusion)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  nav_msgs
+  eigen_conversions
+  diagnostic_msgs
+  diagnostic_updater
+  geometry_msgs
+  message_filters
+  message_generation
+  sensor_msgs
+  std_srvs
+  tf2
+  tf2_geometry_msgs
   roscpp
   rospy
   std_msgs
   tf2_ros
 )
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(YAML_CPP yaml-cpp)
+if(NOT YAML_CPP_FOUND)
+  find_package(yaml-cpp REQUIRED)
+endif()
+
+find_package(Eigen3)
+set(EIGEN_PACKAGE EIGEN3)
+if(NOT EIGEN3_FOUND)
+  find_package(cmake_modules REQUIRED)
+  find_package(Eigen REQUIRED)
+  set(EIGEN3_INCLUDE_DIRS ${EIGEN_INCLUDE_DIRS})
+  set(EIGEN3_LIBRARIES ${EIGEN_LIBRARIES})
+  set(EIGEN_PACKAGE Eigen)
+endif()
+
+set(CMAKE_CXX_STANDARD 14)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -55,11 +84,11 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+   FILES
+    SetPose.srv
+    ToggleFilterProcessing.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -69,10 +98,12 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+    std_msgs
+    geometry_msgs
+    std_msgs 
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -104,10 +135,31 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES sensor_fusion
-#  CATKIN_DEPENDS roscpp rospy std_msgs tf2_ros
-#  DEPENDS system_lib
+ INCLUDE_DIRS 
+  include
+ LIBRARIES 
+  sensor_fusion
+ CATKIN_DEPENDS 
+  roscpp 
+  rospy 
+  std_msgs 
+  tf2_ros
+  tf2_geometry_msgs
+  tf2
+  std_srvs
+  nav_msgs
+  sensor_msgs
+  message_runtime
+  message_filters
+  geometry_msgs
+  eigen_conversions
+  diagnostic_updater
+  diagnostic_msgs
+  cmake_modules
+ DEPENDS 
+  system_lib
+  ${EIGEN_PACKAGE}
+  YAML_CPP
 )
 
 ###########
