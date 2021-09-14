@@ -246,7 +246,10 @@ namespace SensorFusion
        * @brief We also need the previous covariance matrix for differential data
        */
       std::map<std::string, Eigen::MatrixXd> previousMeasurementCovariances_;
-      
+      /**
+       * @brief last call of periodicUpdate
+       */
+      ros::Time lastDiagTime_;
 
   };
 } // namespace SensorFusion
