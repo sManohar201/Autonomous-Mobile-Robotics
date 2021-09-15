@@ -78,6 +78,79 @@ namespace SensorFusion
       RosFilter<T>::RosFilter(nh, nh_priv, ros::this_node::getName(), args) 
   {}
 
+  template<typename T>
+  RosFilter<T>::~RosFilter()
+  {
+    topicSubs_.clear();
+  }
+
+  template<typename T>
+  void RosFilter<T>::initialize()
+  {
+    loadParams();
+    // TODO: still unfinished
+  }
+
+  template<typename T>
+  void RosFilter<T>::loadParams()
+  {
+    /* For diagnostic purposes, collect information about hou many different sources
+    * are measuring each absolute pose variables and do not have differential
+    * integration enabled.
+    * */
+   std::map<StateMembers, int> absPoseVarCounts;
+   absPoseVarCounts[StateMemberX] = 0;
+   absPoseVarCounts[StateMemberY] = 0;
+   absPoseVarCounts[StateMemberZ] = 0;
+   absPoseVarCounts[StateMemberRoll] = 0;
+   absPoseVarCounts[StateMemberPitch] = 0;
+   absPoseVarCounts[StateMemberYaw] = 0;
+
+   std::map<StateMember, int> twistVarCounts;
+   twistVarCounts[StateMemberVx] = 0;
+   twistVarCounts[StateMemberVy] = 0;
+   twistVarCounts[StateMemberVz] = 0;
+   twistVarCounts[StateMemberVroll] = 0;
+   twistVarCounts[StateMemberVpitch] = 0;
+   twistVarCounts[StateMemberVyaw] = 0;
+
+   // determine if we'll be printing diagnostic information
+   nhLocal_.param("print_diagnostics", printDiagnostics_, true);
+   // check for custom gravitational acceleration value
+   nhLocal_.param("gravitational_acceleration", gravitationalAcc_, 9.80665);
+   // Grab the debug param. If true, the node will produce a lot of output.
+   bool debug;
+   nhLocal_.param("debug", debug, false);
+
+   if (debug) 
+   {
+     std::string debugOutFile;
+
+     try 
+     {
+       nhLocal_.param("debug_out_file", debugOutFile, std::string("sensor_fusion_debug.txt"));
+       debugStream_.open(debugOutFile.c_str());
+
+       // make sure we succeeded
+       if (debugStream_.is_open())
+       {
+         filter_.setDebug(debug, &debugStream_);
+       }
+       else
+       {
+         ROS_WARN_STREAM("RosFilter::loadParams() - unable to create 
+         debug output file " << debugOutFile);
+       }
+     }
+     catch(const std::exception &e)
+     {
+       ROS_WARN_STREAM("RosFilter::loadParams() - unable to create debug output file " << debugOutFile << ". Error was " 
+          e.what() << "\n");
+     }
+   }
+
+  }
+    
 
       
 
