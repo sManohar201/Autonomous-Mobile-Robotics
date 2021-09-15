@@ -89,6 +89,13 @@ namespace SensorFusion
                          std::string node_name,
                          std::vector<double> args = std::vector<double>());
                         
+      explicit RosFilter(ros::NodeHandle nh, ros::NodeHandle nh_priv, std::vector<double> args = std::vector<double>());
+
+      ~RosFilter();
+
+      void initialize();
+
+      void loadParams();
       /**
        * @brief Start the filter disabled at startup
        *  if this is true, the filter reads parameters and prepares publishers and subscribers
@@ -250,6 +257,20 @@ namespace SensorFusion
        * @brief last call of periodicUpdate
        */
       ros::Time lastDiagTime_;
+      ros::Time lastSetPoseTime_;
+      ros::Time latestControltime_;
+      ros::Duration tfTimeoffset_;
+      ros::Duration tfTimeout_;
+
+      T filter_;
+
+      ros::NodeHandle nh_;
+      ros::NodeHandle nhLocal_;
+
+      diagnostic_updater::Updater diagnosticUpdater_;
+
+      tf2_ros::TransformListener tfListener_;
+      tf2_ros::Buffer tfBuffer_;
 
   };
 } // namespace SensorFusion
