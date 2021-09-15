@@ -96,6 +96,8 @@ namespace SensorFusion
       void initialize();
 
       void loadParams();
+
+      void setPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg);
       /**
        * @brief Start the filter disabled at startup
        *  if this is true, the filter reads parameters and prepares publishers and subscribers
