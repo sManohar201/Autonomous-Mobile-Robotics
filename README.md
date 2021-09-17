@@ -22,10 +22,11 @@ This repository contains ROS implementation of algorithms thought in the course 
 5. Path Planning
 
 ### TODO: Perception
-1. combine front and rear laser into a single source of laser data
-2. create line extraction package to work with lidar
-3. use line extraction for localization later 
+- [x] combine front and rear laser into a single source of laser data
+- [ ] create line extraction package to work with lidar
+- [ ] use line extraction for localization later 
+
 ### TODO: Sensor Fusion
-1. Finish Sensor Fusion package (EKF, UKF, and Particle filter)
-2. Compare performance between sensor fusion package and robot_pose_ekf package
-3. odometry to trajcetory package to compare how odom estimates drift from true state values. 
+- [ ] Finish Sensor Fusion package (EKF, UKF, and Particle filter)
+- [ ] Compare performance between sensor fusion package and robot_pose_ekf package
+- [ ] odometry to trajcetory package to compare how odom estimates drift from true state values. 
