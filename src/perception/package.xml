@@ -75,6 +75,8 @@
   <build_export_depend>tf2_ros</build_export_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>laser_geometry</exec_depend>
+  <exec_depend>message_generation</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
   <exec_depend>nodelet</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
