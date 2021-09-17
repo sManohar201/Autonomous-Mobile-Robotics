@@ -30,12 +30,12 @@ namespace perception
     
     private:
       /**
-       * @brief - 
+       * @brief - updates the parameters which controls the activation
+       * of the node. 
        * 
-       * @param req 
-       * @param res 
-       * @return true 
-       * @return false 
+       * @param[in] req - request type for service.
+       * @param[out] res - response type for service.
+       * @return - true if the service was completed successfully. 
        */
       bool updateParameters(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
       void frontScanCallback(const sensor_msgs::LaserScan::ConstPtr front_scan);
@@ -51,6 +51,10 @@ namespace perception
        * @brief - node handle (private)
        */
       ros::NodeHandle nh_private_;
+      /**
+       * @brief - server to setup all the parameters.
+       */
+      ros::ServiceServer params_srv_;
       /**
        * @brief - Subscribes to front scan data
        */
