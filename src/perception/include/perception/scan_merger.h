@@ -7,6 +7,11 @@
 #include <laser_geometry/laser_geometry.h>
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/Pose2D.h>
+#include <message_filters/subscriber.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/time_synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
+#include <tf2_ros/transform_listener.h>
 
 
 namespace perception 
@@ -38,11 +43,13 @@ namespace perception
        * @return - true if the service was completed successfully. 
        */
       bool updateParameters(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
-      void frontScanCallback(const sensor_msgs::LaserScan::ConstPtr front_scan);
-      void rearScanCallback(const sensor_msgs::LaserScan::ConstPtr rear_scan);
 
-      void publishMessage();
-      
+      // void publishMessage();
+
+      void initialize() { std_srvs::Empty empt; updateParameters(empt.request, empt.response); }
+
+      void subscriberCallback(const sensor_msgs::LaserScan::ConstPtr &front_scan, 
+                              const sensor_msgs::LaserScan::ConstPtr &rear_scan);
       /**
        * @brief - node handle (global)
        */
@@ -55,14 +62,23 @@ namespace perception
        * @brief - server to setup all the parameters.
        */
       ros::ServiceServer params_srv_;
-      /**
-       * @brief - Subscribes to front scan data
-       */
-      ros::Subscriber front_scan_sub_;
-      /**
-       * @brief - subscribes to rear scan data
-       */
-      ros::Subscriber rear_scan_sub_;
+
+      message_filters::Subscriber<sensor_msgs::LaserScan> front_scan_;
+      message_filters::Subscriber<sensor_msgs::LaserScan> rear_scan_;
+
+      // message_filters::TimeSynchronizer<sensor_msgs::LaserScan, sensor_msgs::LaserScan> time_synchro_;
+
+      typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, sensor_msgs::LaserScan> laser_sync_policy;
+      message_filters::Synchronizer<laser_sync_policy> sync_;
+
+      // /**
+      //  * @brief - Subscribes to front scan data
+      //  */
+      // ros::Subscriber front_scan_sub_;
+      // /**
+      //  * @brief - subscribes to rear scan data
+      //  */
+      // ros::Subscriber rear_scan_sub_;
       /**
        * @brief - publishes merged laser scan.
        */
@@ -76,6 +92,10 @@ namespace perception
        * to point cloud
        */
       laser_geometry::LaserProjection projector_;
+
+      tf2_ros::Buffer tf_buffer_;
+      tf2_ros::TransformListener tf_listener_;
+
       /**
        * @brief - true if front scan messages are received
        */
