@@ -1053,4 +1053,60 @@ namespace SensorFusion
     }
   }
 
-} 
+  template<typename T>
+  void RosFilter<T>::setPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg) 
+  {
+    RF_DEBUG("--------RosFilter::setPoseCallback ---------\nPose message:\n" << *msg);
+    ROS_INFO_STREAM("Received set_pose request with value\n" << *msg);
+    std::string topicName("setPose");
+
+    initialMeasurements_.clear();
+    previousMeasurementCovariances_.clear();
+    previousMeasurement_.clear();
+
+    clearMeasurementQueue();
+
+    filterStateHistory_.clear();
+    measurementHistory_.clear();
+
+    lastSetPoseTime_ = msg->header.stamp;
+    Eigen::VectorXd measurement(STATE_SIZE);
+    Eigen::MatrixXd measurementCovariance(STATE_SIZE, STATE_SIZE);
+    std::vector<int> updateVector(STATE_SIZE, true);
+
+    measurement.setZero();
+
+    measurementCovariance.setIdentity();
+    measurementCovariance *= 1e-6;
+
+    preparePose()
+  }
+
+  template<typename T>
+  bool RosFilter<T>::preparePose(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg,
+            const std::string &topicName,
+            const std::string &targetName,
+            const bool differential,
+            const bool relative,
+            const bool imuData,
+            std::vector<int> &updateVector,
+            Eigen::VectorXd &measurement,
+            Eigen::MatrixXd &measurementCovariance)
+  {
+    bool retVal = false;
+    RF_DEBUG("--------RosFilter::preparePose ("<< topicName << ") --------\n");
+    tf2::Stamped<tf2::Transform> poseTmp;
+    tf2::Transform curMeasurement;
+
+    
+  }
+  template<typename T>
+  void RosFilter<T>::clearMeasurementQueue()
+  {
+    while(!measurementQueue_.empty() && ros::ok())
+    {
+      measurementQueue_.pop();
+    }
+    return;
+  }
+} // namespace SensorFusion 

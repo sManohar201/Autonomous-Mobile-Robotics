@@ -98,6 +98,17 @@ namespace SensorFusion
       void loadParams();
 
       void setPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg);
+
+      bool preparePose(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg,
+      const std::string &topicName,
+      const std::string &targetFrame,
+      const bool differential,
+      const bool relative,
+      const bool imuData,
+      std::vector<int> &updateVector,
+      Eigen::VectorXd &measurement,
+      Eigen::MatrixXd &measurementCovariance);
+      
       /**
        * @brief Start the filter disabled at startup
        *  if this is true, the filter reads parameters and prepares publishers and subscribers
@@ -255,6 +266,9 @@ namespace SensorFusion
        * @brief We also need the previous covariance matrix for differential data
        */
       std::map<std::string, Eigen::MatrixXd> previousMeasurementCovariances_;
+      std::map<std::string, tf2::Transform> previousMeasurements_;
+
+      void clearMeasurementQueue();
       /**
        * @brief last call of periodicUpdate
        */
@@ -274,6 +288,11 @@ namespace SensorFusion
       tf2_ros::TransformListener tfListener_;
       tf2_ros::Buffer tfBuffer_;
 
+      FilterStateHistoryDeque
+      filterStateHistory_;
+      MeasurementHistoryDeque measurementHistory_;
+
+      MeasurementQueue measurementQueue_;
   };
 } // namespace SensorFusion
 
