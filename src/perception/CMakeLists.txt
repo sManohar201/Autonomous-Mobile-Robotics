@@ -20,10 +20,13 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   tf2
   tf2_ros
+  pcl_conversions
+  pcl_ros
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+find_package(PCL REQUIRED)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -114,7 +117,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES perception
- CATKIN_DEPENDS geometry_msgs laser_geometry message_generation nodelet roscpp rospy rviz sensor_msgs std_msgs std_srvs tf2 tf2_ros
+ CATKIN_DEPENDS geometry_msgs laser_geometry message_generation nodelet roscpp rospy rviz sensor_msgs std_msgs std_srvs tf2 tf2_ros pcl_conversions pcl_ros
 #  DEPENDS system_lib
 )
 
