@@ -157,7 +157,7 @@ catkin_package(
   diagnostic_msgs
   cmake_modules
  DEPENDS 
-  system_lib
+  #system_lib
   ${EIGEN_PACKAGE}
   YAML_CPP
 )
