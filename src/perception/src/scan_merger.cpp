@@ -1,6 +1,6 @@
 #include "perception/scan_merger.h"
+#include <pcl_ros/point_cloud.h>
 
-#include <iostream>
 
 namespace perception 
 {
@@ -10,16 +10,11 @@ namespace perception
                         front_scan_(nh_, "/front_laser/scan", 1),
                         rear_scan_(nh_, "/rear_laser/scan", 1),
                         tf_listener_(tf_buffer_),
-                        sync_(laser_sync_policy(5), front_scan_, rear_scan_)
+                        sync_(laser_sync_policy(5), front_scan_, rear_scan_),
+                        target_frame_("chassis_link")
   {
     p_active_ = false;
     
-    front_scan_received_ = false;
-    rear_scan_received_ = false;
-
-    front_scan_error_ = false;
-    rear_scan_error_ = false;
-
     params_srv_ = nh_private_.advertiseService("params", &ScanMerger::updateParameters, this);
 
     initialize();
@@ -46,8 +41,8 @@ namespace perception
       if(p_active_)
       {
         sync_.registerCallback(&ScanMerger::subscriberCallback, this);
-        laser_scan_pub_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
-        pcl_scan_pub_  = nh_.advertise<sensor_msgs::PointCloud2>("pcl", 10);
+        // laser_scan_pub_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
+        pcl_scan_pub_  = nh_.advertise<sensor_msgs::PointCloud2>("automaton/pcl", 10);
       }
       else 
       {
@@ -61,8 +56,32 @@ namespace perception
   void ScanMerger::subscriberCallback(const sensor_msgs::LaserScan::ConstPtr &front_scan, 
                                       const sensor_msgs::LaserScan::ConstPtr &rear_scan)
   {
-    ROS_INFO_STREAM("Front scan time : " << front_scan->header.stamp << "\n"
-                    "Rear scan time : " << rear_scan->header.stamp << "\n"); 
+
+    ROS_INFO_STREAM("Synchronization difference : " << (front_scan->header.stamp - rear_scan->header.stamp)); 
+    
+    try
+    {
+      projector_.transformLaserScanToPointCloud(target_frame_, *front_scan, front_pcl_, tf_buffer_);
+    }
+    catch(const char* s)
+    {
+      ROS_FATAL_STREAM("[Front scan convertion]: " << s);
+    }
+
+    try
+    {
+      projector_.transformLaserScanToPointCloud(target_frame_, *rear_scan, rear_pcl_, tf_buffer_);
+    }
+    catch(const char *s)
+    {
+      ROS_FATAL_STREAM("[Rear scan convertion]: " << s);
+    }
+
+    sensor_msgs::PointCloud2 final_point_cloud;
+    pcl::concatenatePointCloud(front_pcl_, rear_pcl_, final_point_cloud);
+    pcl_scan_pub_.publish(final_point_cloud);
+
+    ROS_INFO_STREAM("PCL creation completed.");
   }
 
 }

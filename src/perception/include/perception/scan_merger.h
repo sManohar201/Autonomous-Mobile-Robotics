@@ -1,18 +1,21 @@
 #ifndef PERCEPTION_SCAN_MERGER_H
 #define PERCEPTION_SCAN_MERGET_H
 
+
 #include <ros/ros.h>
+
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <laser_geometry/laser_geometry.h>
-#include <std_srvs/Empty.h>
 #include <geometry_msgs/Pose2D.h>
+#include <std_srvs/Empty.h>
+
+#include <laser_geometry/laser_geometry.h>
+
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
-#include <message_filters/time_synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
-#include <tf2_ros/transform_listener.h>
 
+#include "perception/perception_utilities.h"
 
 namespace perception 
 {
@@ -105,6 +108,10 @@ namespace perception
        * @brief - stores the converted rear laser scan message.
        */
       sensor_msgs::PointCloud2 rear_pcl_;
+      /**
+       * @brief - target frame for the laser transformation.
+       */
+      std::string target_frame_;
       /**
        * @brief - check if the node is active
        */
