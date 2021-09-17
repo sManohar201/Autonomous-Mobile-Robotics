@@ -4,7 +4,7 @@ This repository contains ROS implementation of algorithms thought in the course 
 ### System requirements
 1. Ubuntu 20.04 LTS
 2. ROS Noetic 
-
+---
 ### Installation steps
 
 - `sudo apt-get install ros-noetic-hector*`
@@ -20,7 +20,7 @@ This repository contains ROS implementation of algorithms thought in the course 
 3. Localization
 4. Simultaneous Localization and Mapping
 5. Path Planning
-
+---
 ### TODO: Perception
 - [x] combine front and rear laser into a single source of laser data.
 - [ ] feature extraction algorithm, line, blobs, and corners for now.
@@ -43,4 +43,4 @@ This repository contains ROS implementation of algorithms thought in the course 
 
 ### TODO: Path Planning
 
-### Documentaion
+
