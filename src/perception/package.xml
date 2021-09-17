@@ -62,6 +62,9 @@
   <build_depend>std_srvs</build_depend>
   <build_depend>tf2</build_depend>
   <build_depend>tf2_ros</build_depend>
+  <build_depend>libpcl-all-dev</build_depend>
+  <build_depend>pcl_conversions</build_depend>
+  <build_depend>pcl_ros</build_depend>
   <build_export_depend>geometry_msgs</build_export_depend>
   <build_export_depend>laser_geometry</build_export_depend>
   <build_export_depend>nodelet</build_export_depend>
@@ -86,7 +89,9 @@
   <exec_depend>std_srvs</exec_depend>
   <exec_depend>tf2</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
-
+  <exec_depend>libpcl-all</exec_depend>
+  <exec_depend>pcl_conversions</exec_depend>
+  <exec_depend>pcl_ros</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
