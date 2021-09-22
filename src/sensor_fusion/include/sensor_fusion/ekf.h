@@ -30,7 +30,7 @@ namespace SensorFusion
        * needed so that the ROS filters can pass arbitrary arguments 
        * to templated filter types).
        */
-      explicit Ekf(std::vector<double> args = std::vetor<double>());
+      explicit Ekf(std::vector<double> args = std::vector<double>());
 
       /**
        * @brief Destroy the Ekf object
@@ -57,7 +57,8 @@ namespace SensorFusion
        */
       void predict(const double referenceTime, const double delta);
 
-  }  
+  };
+
 } // namespace SensorFusion 
 
 #endif
