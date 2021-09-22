@@ -29,17 +29,19 @@ This repository contains ROS implementation of algorithms thought in the course 
 
 ### TODO: Sensor Fusion
 - [x] base template for sensor fusion
-- [ ] Implement EKF, UKF
+- [x] Implement EKF
+- [ ] Implement UKF
 - [ ] Compare performance between sensor fusion package and robot_pose_ekf package
 - [ ] odometry to trajcetory package to compare how odom estimates drift from true state values. 
 
 ### TODO: Localization
 - [ ] Iterative closest point (should I move this to perception)
-- [ ] Monte Carlo Localization
+- [ ] Kalman filters with iterative solution.
+- [ ] Monte Carlo Localization.
 
 ### TODO: SLAM
 - [ ] Occupancy grid mapping (half done improve bresenham rasterisation algorithm)
-- [ ] EKF slam
+- [ ] EKF slam with unknown correspondencies.
 
 ### TODO: Path Planning
 
