@@ -100,15 +100,167 @@ namespace SensorFusion
       void setPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg);
 
       bool preparePose(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg,
-      const std::string &topicName,
-      const std::string &targetFrame,
-      const bool differential,
-      const bool relative,
-      const bool imuData,
-      std::vector<int> &updateVector,
-      Eigen::VectorXd &measurement,
-      Eigen::MatrixXd &measurementCovariance);
+                          const std::string &topicName,
+                          const std::string &targetFrame,
+                          const bool differential,
+                          const bool relative,
+                          const bool imuData,
+                          std::vector<int> &updateVector,
+                          Eigen::VectorXd &measurement,
+                          Eigen::MatrixXd &measurementCovariance);
+
+      bool prepareTwist(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg,
+                        const std::string &topicName,
+                        const std::string &targetFrame,
+                        std::vector<int> &updateVector,
+                        Eigen::VectorXd &measurement,
+                        Eigen::MatrixXd &measurementCovariance);
+      void reset();
+      /**
+       * @brief - Service callback to toggle processing measurements for a standby mode but continuing to
+       *  publish.
+       * @param[in] req - The state requested, on true or off false.
+       * @param[out] res - status if upon success.
+       * @return - boolean true if succesful, false if not.
+       */
+      bool toggleFilterProcessingCallback(sensor_fusion::ToggleFilterProcessing::Request &req, 
+                                          sensor_fusion::ToggleFilterProcessing::Response &res);
+
+      /**
+       * @brief - Callback method for receiviing all acceleration (IMU) message.
+       * 
+       * @param[in] msg - the ros imu message to take in.
+       * @param[in] callbackData - relevant static callback data
+       * @param[in] targetFrame - the target frame_id into which to transform the data.
+       */
+      void accelerationCallback(const sensor_msgs::Imu::ConstPtr &msg,
+                                const CallbackData &callbackData,
+                                const std::string &targetFrame);
+
+      /**
+       * @brief - callback method for receiving non-stamped control input
+       * 
+       * @param[in] msg - the ros twist message to take in.
+       */
+      void controlCallback(const geometry_msgs::Twist::ConstPtr &msg);
+      /**
+       * @brief - callback method for receiving stamped control input
+       * 
+       * @param[in] msg - the ros stamped twist message to take in.
+       */
+      void controlCallback(const geometry_msgs::TwistStamped::ConstPtr &msg);
+
+      void enqueueMeasurement(const std::string &topicName,
+                              const Eigen::VectorXd &measurement,
+                              const Eigen::MatrixXd &measurementCovariance,
+                              const std::vector<int> &updateVector,
+                              const double mahalanobisThresh,
+                              const ros::Time &time);
+
+      void forceTwoD(Eigen::VectorXd &measurement,
+                    Eigen::MatrixXd &measurementCovariances,
+                    std::vector<int> &updateVector);
       
+      bool getFilteredOdometryMessage(nav_msgs::Odometry &message);
+
+      bool getFilteredAccelMessage(geometry_msgs::AccelWithCovarianceStamped &message);
+
+      /**
+       * @brief - Callback method for receiving all IMU messages
+       * 
+       * @param[in] msg - the ROS imu message to take in.
+       * @param[in] topicName - the topic name for the IMU message (only used for debug output)
+       * @param[in] poseCallbackData - relevant static callback data for orientation variables.
+       * @param[in] twistCallbackData - relevant static callback data for angular velocity variables.
+       * @param[in] accelCallbackData - relevant static callback data for linear acceleration variables.
+       */
+      void imuCallback(const sensor_msgs::Imu::ConstPtr &msg, const std::string &topicName,
+                       const CallbackData &poseCallbackData, const CallbackData &twistCallbackData,
+                       const CallbackData &accelCallbackData);
+      /**
+       * @brief - process all measurements in the measurement queue, in temporal order
+       * 
+       * @param[in] currentTime - the time at which to carry out integration (the current time).
+       */
+      void integrateMeasurements(const ros::Time &currentTime);
+
+      /**
+       * @brief callback method for receiving all pose message.
+       * 
+       * @param[in] msg - the ros stamped pose with covariance message to take in.
+       * @param[in] callbackData - relevant static callback data
+       * @param[in] targetFrame - the target frame_id into which to transform the data.
+       * @param[in] imuData - whether this data comes from an IMU.
+       */
+      void poseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg,
+                        const CallbackData &callbackData,
+                        const std::string &targetFrame,
+                        const bool imuData);
+
+      bool setPoseSrvCallback(sensor_fusion::SetPose::Request &request, 
+                              sensor_fusion::SetPose::Response &response);
+      
+      void odometryCallback(const nav_msgs::Odometry::ConstPtr &msg, const std::string &topicName,
+                            const CallbackData &poseCallbackData, const CallbackData &twistCallbackData);
+
+      void periodicUpdate(const ros::TimerEvent &event);
+
+      bool enableFilterSrvCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&);
+
+      void twistCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg,
+                         const CallbackData &CallbackData,
+                         const std::string &targetFrame);
+
+      bool validateFilterOutput(const nav_msgs::Odometry &message);
+    protected:
+      /**
+       * @brief - finds the latest filter state before the given timestamp and makes it the current state
+       * again. this method also inserts all measurements between the older filter timestamp and now into 
+       * the measurements queue.
+       * 
+       * @param[in] time - the time to which the filter state should revert.
+       * @return True if restoring the filter succeeded. 
+       */
+      bool revertTo(const double time);
+      /**
+       * @brief - save the current filter state in the queue of previous filter state.
+       *  These measurements will be used in backwards smoothing in the event that older measurements 
+       * come in. 
+       * @param[in] filter - the filter base object whose state we want to save.
+       */
+      void saveFilterState(FilterBase &filter);
+      /**
+       * @brief - removes measurements and filter states older than the given cutfoff time.
+       * 
+       * @param[in] cutoffTime - measurements and states older than this time will be dropped.
+       */
+      void clearExpiredHistory(const double cutoffTime);
+
+      void addDiagnostic(const int errLevel,
+                         const std::string &topicAndClass,
+                         const std::string &message,
+                         const bool staticDiag);
+      
+      void aggregateDiagnostics(diagnostic_updater::DiagnosticStatusWrapper &wrapper);
+
+      void copyCovariance(const double *arr,
+                          Eigen::MatrixXd &covariance,
+                          const std::string &topicName,
+                          const std::vector<int> &updateVector,
+                          const size_t offset,
+                          const size_t dimension);
+      void copyCovariance(const Eigen::MatrixXd &covariance,
+                          double *arr,
+                          const size_t dimension);
+      
+      std::vector<int> loadUpdateConfig(const std::string &topicName);
+
+      bool prepareAcceleration(const sensor_msgs::Imu::ConstPtr &msg,
+                               const std::string &topicName,
+                               const std::string &targetFrame,
+                               std::vector<int> &updateVector,
+                               Eigen::VectorXd &measurement,
+                               Eigen::MatrixXd &measurementCovariance);
       /**
        * @brief Start the filter disabled at startup
        *  if this is true, the filter reads parameters and prepares publishers and subscribers
