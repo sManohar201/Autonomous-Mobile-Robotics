@@ -3200,3 +3200,7 @@ namespace SensorFusion
     return;
   }
 }  // namespace SensorFusion 
+
+// instantiations of classes is required when template class code
+// is placed in a .cpp file
+template class SensorFusion::RosFilter<SensorFusion::Ekf>;
