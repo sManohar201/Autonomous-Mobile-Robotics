@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from __future__ import print_function
 import rospy
 from tf.transformations import quaternion_from_euler
@@ -78,8 +78,8 @@ if __name__ == '__main__':
         #max size of array pose msg from the path
         if not rospy.has_param("~max_list_append"):
                 rospy.logwarn('The parameter max_list_append dont exists')
-        max_append = rospy.set_param("~max_list_append",1000) 
-        max_append = 1000
+        max_append = rospy.set_param("~max_list_append",3000) 
+        max_append = 3000
         if not (max_append > 0):
                 rospy.logwarn('The parameter max_list_append not is correct')
                 sys.exit()

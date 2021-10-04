@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
 
         #Node and msg initialization
-        rospy.init_node('path_ekf_plotter')
+        rospy.init_node('path_odom_plotter')
 
 
         #Rosparams that are set in the launch
@@ -83,16 +83,14 @@ if __name__ == '__main__':
         if not (max_append > 0):
                 rospy.logwarn('The parameter max_list_append not is correct')
                 sys.exit()
-        pub = rospy.Publisher('/ekfpath', Path, queue_size=1)
+        pub = rospy.Publisher('/odompath_ground_truth', Path, queue_size=1)
 
 
         path = Path() #creamos el mensaje path de tipo path 
         msg = Odometry()
 
         #Subscription to the topic
-        # msg = rospy.Subscriber('/odometry/filtered', PoseWithCovarianceStamped, callback) 
-        msg = rospy.Subscriber('/odometry/filtered', Odometry, callback)
-        
+        msg = rospy.Subscriber('/ground_truth/state', Odometry, callback) 
 
         rate = rospy.Rate(30) # 30hz
 
