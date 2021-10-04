@@ -1,5 +1,5 @@
 # Autonomous-Mobile-Robotics
-This repository contains ROS implementation of algorithms thought in the course [Autonomous Mobile Robots](https://www.edx.org/course/autonomous-mobile-robots).
+This repository contains from the scratch ROS implementation of robot autonomy algorithms.  
 ---
 ### System requirements
 1. Ubuntu 20.04 LTS
@@ -31,8 +31,8 @@ This repository contains ROS implementation of algorithms thought in the course 
 - [x] base template for sensor fusion
 - [x] Implement EKF
 - [ ] Implement UKF
-- [ ] Compare performance between sensor fusion package and robot_pose_ekf package
-- [ ] odometry to trajcetory package to compare how odom estimates drift from true state values. 
+- [x] Compare performance between sensor fusion package and robot_pose_ekf package
+- [x] odometry to trajcetory package to compare how odom estimates drift from true state values. 
 
 ### TODO: Localization
 - [ ] Iterative closest point (should I move this to perception)
@@ -40,7 +40,7 @@ This repository contains ROS implementation of algorithms thought in the course 
 - [ ] Monte Carlo Localization.
 
 ### TODO: SLAM
-- [ ] Occupancy grid mapping (half done improve bresenham rasterisation algorithm)
+- [X] Occupancy grid mapping (half done improve bresenham rasterisation algorithm)
 - [ ] EKF slam with unknown correspondencies.
 
 ### TODO: Path Planning
