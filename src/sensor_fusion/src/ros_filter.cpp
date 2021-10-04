@@ -460,7 +460,7 @@ namespace SensorFusion
     {
       // Per the IMU message specification, if the IMU does not provide orientation,
       // then its first covariance value should be set to -1, and we should ignore
-      // that portion of the message. robot_localization allows users to explicitly
+      // that portion of the message. sensor fusion allows users to explicitly
       // ignore data using its parameters, but we should also be compliant with
       // message specs.
       if (::fabs(msg->orientation_covariance[0] + 1) < 1e-9)
@@ -702,7 +702,7 @@ namespace SensorFusion
 
       try
       {
-        nhLocal_.param("debug_out_file", debugOutFile, std::string("robot_localization_debug.txt"));
+        nhLocal_.param("debug_out_file", debugOutFile, std::string("sensor_fusion_debug.txt"));
         debugStream_.open(debugOutFile.c_str());
 
         // Make sure we succeeded
@@ -745,9 +745,9 @@ namespace SensorFusion
      * we must *compute* map->base_link, but then use the existing odom->base_link
      * transform to compute *and broadcast* map->odom.
      *
-     * The state estimation nodes in robot_localization therefore have two "modes."
+     * The state estimation nodes in sensor_fusion therefore have two "modes."
      * If your world_frame parameter value matches the odom_frame parameter value,
-     * then robot_localization will assume someone else is broadcasting a transform
+     * then sensor_fusion will assume someone else is broadcasting a transform
      * from odom_frame->base_link_frame, and it will compute the
      * map_frame->odom_frame transform. Otherwise, it will simply compute the
      * odom_frame->base_link_frame transform.
@@ -992,7 +992,7 @@ namespace SensorFusion
     // Init the last measurement time so we don't get a huge initial delta
     filter_.setLastMeasurementTime(ros::Time::now().toSec());
 
-    // Now pull in each topic to which wel want to subscribe.
+    // Now pull in each topic to which we want to subscribe.
     // Start with odom.
     size_t topicInd = 0;
     bool moreParams = false;
@@ -2039,7 +2039,7 @@ namespace SensorFusion
 
   template<typename T>
   bool RosFilter<T>::setPoseSrvCallback(sensor_fusion::SetPose::Request& request,
-                          sensor_fusion::SetPose::Response& response)
+                          sensor_fusion::SetPose::Response&)
   {
     geometry_msgs::PoseWithCovarianceStamped::Ptr msg;
     msg = boost::make_shared<geometry_msgs::PoseWithCovarianceStamped>(request.pose);
@@ -2187,20 +2187,20 @@ namespace SensorFusion
     {
       case diagnostic_msgs::DiagnosticStatus::ERROR:
         wrapper.summary(maxErrLevel,
-                        "Erroneous data or settings detected for a robot_localization state estimation node.");
+                        "Erroneous data or settings detected for a sensor_fusion state estimation node.");
         break;
       case diagnostic_msgs::DiagnosticStatus::WARN:
         wrapper.summary(maxErrLevel,
                         "Potentially erroneous data or settings detected for "
-                        "a robot_localization state estimation node.");
+                        "a sensor_fusion state estimation node.");
         break;
       case diagnostic_msgs::DiagnosticStatus::STALE:
         wrapper.summary(maxErrLevel,
-                        "The state of the robot_localization state estimation node is stale.");
+                        "The state of the sensor fusion state estimation node is stale.");
         break;
       case diagnostic_msgs::DiagnosticStatus::OK:
         wrapper.summary(maxErrLevel,
-                        "The robot_localization state estimation node appears to be functioning properly.");
+                        "The sensor_fusion state estimation node appears to be functioning properly.");
         break;
       default:
         break;
@@ -2358,7 +2358,7 @@ namespace SensorFusion
     // Set relevant header info
     std::string msgFrame = (msg->header.frame_id == "" ? baseLinkFrameId_ : msg->header.frame_id);
 
-    // 2. robot_localization lets users configure which variables from the sensor should be
+    // 2. sensor_fusion lets users configure which variables from the sensor should be
     //    fused with the filter. This is specified at the sensor level. However, the data
     //    may go through transforms before being fused with the state estimate. In that case,
     //    we need to know which of the transformed variables came from the pre-transformed
@@ -2617,7 +2617,7 @@ namespace SensorFusion
     // 3. Make sure we can work with this data before carrying on
     if (canTransform)
     {
-      /* 4. robot_localization lets users configure which variables from the sensor should be
+      /* 4. sensor_fusion lets users configure which variables from the sensor should be
        *    fused with the filter. This is specified at the sensor level. However, the data
        *    may go through transforms before being fused with the state estimate. In that case,
        *    we need to know which of the transformed variables came from the pre-transformed
@@ -2940,7 +2940,7 @@ namespace SensorFusion
     // Determine the frame_id of the data
     std::string msgFrame = (msg->header.frame_id == "" ? targetFrame : msg->header.frame_id);
 
-    // 2. robot_localization lets users configure which variables from the sensor should be
+    // 2. sensor_fusion lets users configure which variables from the sensor should be
     //    fused with the filter. This is specified at the sensor level. However, the data
     //    may go through transforms before being fused with the state estimate. In that case,
     //    we need to know which of the transformed variables came from the pre-transformed
