@@ -16,5 +16,9 @@
   <rosparam command="load" file="$(find robot_description)/config/control.yaml"/>
 
   <node name="automaton_controller_manager" pkg="controller_manager" type="spawner" args="automaton_joint_publisher automaton_velocity_controller" />
+  
+  <node name="ekf_sensor_fusion" pkg="robot_localization" type="ekf_localization_node">
+    <rosparam command="load" file="$(find robot_description)/config/robot_localization.yaml"/>
+  </node>
 
 </launch>
