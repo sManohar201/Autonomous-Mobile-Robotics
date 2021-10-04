@@ -1,0 +1,3 @@
+[submodule "src/odom_to_trajectory"]
+	path = src/odom_to_trajectory
+	url = git@github.com:udacity/odom_to_trajectory.git
