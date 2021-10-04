@@ -4,9 +4,9 @@
 
   <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
 
-  <node name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" output="screen">
-    <param name="use_gui" value="TRUE"/>
-  </node>
+  <!-- <node name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" output="screen"> -->
+    <!-- <param name="use_gui" value="TRUE"/> -->
+  <!-- </node> -->
 
   <node name="robot_state_publihser" pkg="robot_state_publisher" type="robot_state_publisher" output="screen" />
 
