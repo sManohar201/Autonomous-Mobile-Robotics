@@ -1,302 +1,355 @@
-#include "sensor_fusion/filter_base.h"
-#include "sensor_fusion/filter_common.h"
-
 #include <iomanip>
 #include <iostream>
 #include <limits>
 #include <sstream>
 #include <vector>
 
+#include "sensor_fusion/filter_base.h"
+#include "sensor_fusion/filter_common.h"
 
-namespace SensorFusion {
+namespace SensorFusion
+{
+FilterBase::FilterBase()
+  : initialized_(false)
+  , useControl_(false)
+  , useDynamicProcessNoiseCovariance_(false)
+  , lastMeasurementTime_(0.0)
+  , latestControlTime_(0.0)
+  , controlTimeout_(0.0)
+  , sensorTimeout_(0.0)
+  , controlUpdateVector_(TWIST_SIZE, 0)
+  , accelerationGains_(TWIST_SIZE, 0.0)
+  , accelerationLimits_(TWIST_SIZE, 0.0)
+  , decelerationLimits_(TWIST_SIZE, 0.0)
+  , controlAcceleration_(TWIST_SIZE)
+  , latestControl_(TWIST_SIZE)
+  , predictedState_(STATE_SIZE)
+  , state_(STATE_SIZE)
+  , covarianceEpsilon_(STATE_SIZE, STATE_SIZE)
+  , dynamicProcessNoiseCovariance_(STATE_SIZE, STATE_SIZE)
+  , estimateErrorCovariance_(STATE_SIZE, STATE_SIZE)
+  , identity_(STATE_SIZE, STATE_SIZE)
+  , processNoiseCovariance_(STATE_SIZE, STATE_SIZE)
+  , transferFunction_(STATE_SIZE, STATE_SIZE)
+  , transferFunctionJacobian_(STATE_SIZE, STATE_SIZE)
+  , debugStream_(nullptr)
+  , debug_(false)
+{
+}
 
-  FilterBase::FilterBase(): 
-    initialized_(false),
-    useControl_(false),
-    useDynamicProcessNoiseCovariance_(false),
-    lastMeasurementTime_(0.0),
-    latestControlTime_(0.0),
-    controlTimeout_(0.0),
-    sensorTimeout_(0.0),
-    controlUpdateVector_(TWIST_SIZE, 0),
-    accelerationGains_(TWIST_SIZE, 0.0),
-    accelerationLimits_(TWIST_SIZE, 0.0),
-    decelerationLimits_(TWIST_SIZE, 0.0),
-    controlAcceleration_(TWIST_SIZE),
-    latestControl_(TWIST_SIZE),
-    predictedState_(STATE_SIZE),
-    state_(STATE_SIZE),
-    covarianceEpsilon_(STATE_SIZE, STATE_SIZE),
-    dynamicProcessNoiseCovariance_(STATE_SIZE, STATE_SIZE),
-    estimateErrorCovariance_(STATE_SIZE, STATE_SIZE),
-    identity_(STATE_SIZE, STATE_SIZE),
-    processNoiseCovariance_(STATE_SIZE, STATE_SIZE),
-    transferFunction_(STATE_SIZE, STATE_SIZE),
-    transferFunctionJacobian_(STATE_SIZE, STATE_SIZE),
-    debugStream_(nullptr),
-    debug_(false)
-  {}
+FilterBase::~FilterBase()
+{
+}
 
-  FilterBase::~FilterBase() {}
+void FilterBase::reset()
+{
+  initialized_ = false;
+  // clear the state and predicted state
+  state_.setZero();
+  predictedState_.setZero();
+  controlAcceleration_.setZero();
+  // prepare the invariant parts of the transfer
+  // function
+  transferFunction_.setIdentity();
+  // clear the jacobian
+  transferFunctionJacobian_.setZero();
+  // set the estimate error covariance. We want our
+  // measurements to be accepted rapidly when the
+  // filter starts, so we should initialize the state's
+  // covarinace with large values.
+  // TODO: Where is state's covariance.
+  // small values here means it is most reliable.
+  estimateErrorCovariance_.setIdentity();
+  estimateErrorCovariance_ *= 1e-9;
+  // we need the identity for the update equations
+  identity_.setIdentity();
+  // set the epsilon matrix to tbe a matix with small values on the diagonal
+  // It is used to maintain the positive-definite property of the covariance
+  // V*E*V^t >= 0
+  covarianceEpsilon_.setIdentity();
+  covarianceEpsilon_ *= 0.001;
+  // Assume 30Hz from sensor data
+  sensorTimeout_ = 0.0333333333;
+  // Initialize our measurement time
+  lastMeasurementTime_ = 0;
+  // These can be overridden via the launch parameters,
+  // but we need default values.
+  // TODO: how to tune it?
+  processNoiseCovariance_.setZero();
+  processNoiseCovariance_(StateMemberX, StateMemberX) = 0.05;
+  processNoiseCovariance_(StateMemberY, StateMemberY) = 0.05;
+  processNoiseCovariance_(StateMemberZ, StateMemberZ) = 0.05;
+  processNoiseCovariance_(StateMemberRoll, StateMemberRoll) = 0.03;
+  processNoiseCovariance_(StateMemberPitch, StateMemberPitch) = 0.03;
+  processNoiseCovariance_(StateMemberYaw, StateMemberYaw) = 0.06;
+  processNoiseCovariance_(StateMemberVx, StateMemberVx) = 0.025;
+  processNoiseCovariance_(StateMemberVy, StateMemberVy) = 0.025;
+  processNoiseCovariance_(StateMemberVz, StateMemberVz) = 0.04;
+  processNoiseCovariance_(StateMemberVroll, StateMemberVroll) = 0.01;
+  processNoiseCovariance_(StateMemberVpitch, StateMemberVpitch) = 0.01;
+  processNoiseCovariance_(StateMemberVyaw, StateMemberVyaw) = 0.02;
+  processNoiseCovariance_(StateMemberAx, StateMemberAx) = 0.01;
+  processNoiseCovariance_(StateMemberAy, StateMemberAy) = 0.01;
+  processNoiseCovariance_(StateMemberAz, StateMemberAz) = 0.015;
 
-  void FilterBase::reset() {
-    initialized_ = false;
-    // clear the state and predicted state
-    state_.setZero();
-    predictedState_.setZero();
-    controlAcceleration_.setZero();
-    // prepare the invariant parts of the transfer
-    // function
-    transferFunction_.setIdentity();
-    // clear the jacobian
-    transferFunctionJacobian_.setZero();
-    // set the estimate error covariance. We want our 
-    // measurements to be accepted rapidly when the 
-    // filter starts, so we should initialize the state's
-    // covarinace with large values. 
-    // TODO: Where is state's covariance.
-    // small values here means it is most reliable.
-    estimateErrorCovariance_.setIdentity();
-    estimateErrorCovariance_ *= 1e-9;
-    // we need the identity for the update equations
-    identity_.setIdentity();
-    // set the epsilon matrix to tbe a matix with small values on the diagonal
-    // It is used to maintain the positive-definite property of the covariance
-    // V*E*V^t >= 0
-    covarianceEpsilon_.setIdentity();
-    covarianceEpsilon_ *= 0.001;
-    // Assume 30Hz from sensor data
-    sensorTimeout_ = 0.0333333333;
-    // Initialize our measurement time
-    lastMeasurementTime_ = 0;
-    // These can be overridden via the launch parameters,
-    // but we need default values.
-    // TODO: how to tune it?
-    processNoiseCovariance_.setZero();
-    processNoiseCovariance_(StateMemberX, StateMemberX) = 0.05;
-    processNoiseCovariance_(StateMemberY, StateMemberY) = 0.05;
-    processNoiseCovariance_(StateMemberZ, StateMemberZ) = 0.05;
-    processNoiseCovariance_(StateMemberRoll, StateMemberRoll) = 0.03;
-    processNoiseCovariance_(StateMemberPitch, StateMemberPitch) = 0.03;
-    processNoiseCovariance_(StateMemberYaw, StateMemberYaw) = 0.06;
-    processNoiseCovariance_(StateMemberVx, StateMemberVx) = 0.025;
-    processNoiseCovariance_(StateMemberVy, StateMemberVy) = 0.025;
-    processNoiseCovariance_(StateMemberVz, StateMemberVz) = 0.04;
-    processNoiseCovariance_(StateMemberVroll, StateMemberVroll) = 0.01;
-    processNoiseCovariance_(StateMemberVpitch, StateMemberVpitch) = 0.01;
-    processNoiseCovariance_(StateMemberVyaw, StateMemberVyaw) = 0.02;
-    processNoiseCovariance_(StateMemberAx, StateMemberAx) = 0.01;
-    processNoiseCovariance_(StateMemberAy, StateMemberAy) = 0.01;
-    processNoiseCovariance_(StateMemberAz, StateMemberAz) = 0.015;
+  dynamicProcessNoiseCovariance_ = processNoiseCovariance_;
+}
 
-    dynamicProcessNoiseCovariance_ = processNoiseCovariance_;
-  }
+void FilterBase::computeDynamicProcessNoiseCovariance(const Eigen::VectorXd &state, const double data)
+{
+  // A more principled approach would be to get the current velocity from the state, make a diagonal matrix form it,
+  // and then rotate it to be in the world frame. (i.e. the same frame as the pose data).
+  // We could then use this rotated velocity matrix to sacle the process noise covarinace for the pose variables as
+  // rotatedvelocityMatrix * poseCovariance * rotatedVelocityMatrix'
+  // However, this presents trouble for robots that may incur rotational error as
+  // a result of linear motion (and vice-versa). Instead we create a diagonal matrix
+  // whose diagonal values are the vector norm of the state's velocity. We use that to
+  // scale the process noise covariance.
+  // TODO: read more about dynamic process noise covariance
+  Eigen::MatrixXd velocityMatrix(TWIST_SIZE, TWIST_SIZE);
+  velocityMatrix.setIdentity();
+  velocityMatrix.diagonal() *= state.segment(POSITION_V_OFFSET, TWIST_SIZE).norm();
 
-  void FilterBase::computeDynamicProcessNoiseCovariance(const Eigen::VectorXd &state, const double data) {
-    // A more principled approach would be to get the current velocity from the state, make a diagonal matrix form it, 
-    // and then rotate it to be in the world frame. (i.e. the same frame as the pose data).
-    // We could then use this rotated velocity matrix to sacle the process noise covarinace for the pose variables as
-    // rotatedvelocityMatrix * poseCovariance * rotatedVelocityMatrix'
-    // However, this presents trouble for robots that may incur rotational error as 
-    // a result of linear motion (and vice-versa). Instead we create a diagonal matrix
-    // whose diagonal values are the vector norm of the state's velocity. We use that to
-    // scale the process noise covariance.
-    // TODO: read more about dynamic process noise covariance
-    Eigen::MatrixXd velocityMatrix(TWIST_SIZE, TWIST_SIZE);
-    velocityMatrix.setIdentity();
-    velocityMatrix.diagonal() *= state.segment(POSITION_V_OFFSET, TWIST_SIZE).norm();
+  dynamicProcessNoiseCovariance_.block<TWIST_SIZE, TWIST_SIZE>(POSITION_OFFSET, POSITION_OFFSET) =
+      velocityMatrix * processNoiseCovariance_.block<TWIST_SIZE, TWIST_SIZE>(POSITION_OFFSET, POSITION_OFFSET) *
+      velocityMatrix.transpose();
+}
 
-    dynamicProcessNoiseCovariance_.block<TWIST_SIZE, TWIST_SIZE>(POSITION_OFFSET, POSITION_OFFSET) =
-        velocityMatrix *
-        processNoiseCovariance_.block<TWIST_SIZE, TWIST_SIZE>(POSITION_OFFSET, POSITION_OFFSET) *
-        velocityMatrix.transpose();
-  }
+const Eigen::VectorXd &FilterBase::getControl()
+{
+  return latestControl_;
+}
 
-  const Eigen::VectorXd& FilterBase::getControl() {
-    return latestControl_;
-  }
+double FilterBase::getControlTime()
+{
+  return latestControlTime_;
+}
 
-  double FilterBase::getControlTime() {
-    return latestControlTime_;
-  }
+bool FilterBase::getDebug()
+{
+  return debug_;
+}
 
-  bool FilterBase::getDebug() {
-    return debug_;
-  }
+const Eigen::MatrixXd &FilterBase::getEstimateErrorCovariance()
+{
+  return estimateErrorCovariance_;
+}
 
-  const Eigen::MatrixXd& FilterBase::getEstimateErrorCovariance() {
-    return estimateErrorCovariance_;
-  }
+bool FilterBase::getInitializedStatus()
+{
+  return initialized_;
+}
 
-  bool FilterBase::getInitializedStatus() {
-    return initialized_;
-  }
+double FilterBase::getLastMeasurementTime()
+{
+  return lastMeasurementTime_;
+}
 
-  double FilterBase::getLastMeasurementTime() {
-    return lastMeasurementTime_;
-  }
+const Eigen::VectorXd &FilterBase::getPredictedState()
+{
+  return predictedState_;
+}
 
-  const Eigen::VectorXd& FilterBase::getPredictedState() {
-    return predictedState_;
-  }
+const Eigen::MatrixXd &FilterBase::getProcessNoiseCovariance()
+{
+  return processNoiseCovariance_;
+}
 
-  const Eigen::MatrixXd& FilterBase::getProcessNoiseCovariance() {
-    return processNoiseCovariance_;
-  }
+double FilterBase::getSensorTimeout()
+{
+  return sensorTimeout_;
+}
 
-  double FilterBase::getSensorTimeout() {
-    return sensorTimeout_;
-  }
+const Eigen::VectorXd &FilterBase::getState()
+{
+  return state_;
+}
 
-  const Eigen::VectorXd& FilterBase::getState() {
-    return state_;
-  }
-
-  void FilterBase::processMeasurement(const Measurement& measurement) {
-    FB_DEBUG("------- FilterBase::processMeasurement (" << measurement.topicName_ << ") ------\n");
-    double delta = 0.0;
-    // if we've had a previous reading, then go through the predict/update
-    // cycle. Otherwise, set our state and covariance to whatever we get from
-    // this measurement.
-    if (initialized_) {
-      // Determine how much time has passed since out last measurement
-      delta = measurement.time_ - lastMeasurementTime_;
-      FB_DEBUG("Filter is already initialized. Carrying out predict/correct loop...\n"
-               "Measurement time is " << std::setprecision(20) << measurement.time_ <<
-               ", last measurement time is " << lastMeasurementTime_ << ", delta is " << delta << "\n");
-      // only want to carry out a predition if it's
-      // forward in time. Otherwise, just correct.
-      if (delta > 0) {
-        validateDelta(delta);
-        predict(measurement.time_, delta);
-        // return this to the user
-        predictedState_ = state_;
-      }
-      correct(measurement);
-    } else {
-      FB_DEBUG("First measurement. Initializing filter. \n");
-      // initialize the filter, but only with the values we're using.
-      size_t measurementLength = measurement.updateVector_.size();
-      for (size_t i=0; i<measurementLength; i++) {
-        state_[i] = (measurement.updateVector_[i] ? measurement.measurement_[i] : state_[i]);
-      }
-      // same for covariance
-      for (size_t i = 0; i < measurementLength; i++) {
-        for (size_t j = 0; j < measurementLength; j++) {
-          estimateErrorCovariance_(i,j) = (measurement.updateVector_[i] && measurement.updateVector_[j] ? 
-                                            measurement.covariance_(i,j) : 
-                                            estimateErrorCovariance_(i,j));
-        }
-        initialized_ = true;
-      }
-      if (delta>=0.0) {
-        lastMeasurementTime_ = measurement.time_;
-      }
-      FB_DEBUG("------ /FilterBase::processMeasurement (" << measurement.topicName_ << ") -------\n");
+void FilterBase::processMeasurement(const Measurement &measurement)
+{
+  FB_DEBUG("------- FilterBase::processMeasurement (" << measurement.topicName_ << ") ------\n");
+  double delta = 0.0;
+  // if we've had a previous reading, then go through the predict/update
+  // cycle. Otherwise, set our state and covariance to whatever we get from
+  // this measurement.
+  if (initialized_)
+  {
+    // Determine how much time has passed since out last measurement
+    delta = measurement.time_ - lastMeasurementTime_;
+    FB_DEBUG("Filter is already initialized. Carrying out predict/correct loop...\n"
+             "Measurement time is "
+             << std::setprecision(20) << measurement.time_ << ", last measurement time is " << lastMeasurementTime_
+             << ", delta is " << delta << "\n");
+    // only want to carry out a predition if it's
+    // forward in time. Otherwise, just correct.
+    if (delta > 0)
+    {
+      validateDelta(delta);
+      predict(measurement.time_, delta);
+      // return this to the user
+      predictedState_ = state_;
     }
+    correct(measurement);
   }
-
-  void FilterBase::setControl(const Eigen::VectorXd &control, const double controlTime) {
-    latestControl_ = control;
-    latestControlTime_ = controlTime;
+  else
+  {
+    FB_DEBUG("First measurement. Initializing filter. \n");
+    // initialize the filter, but only with the values we're using.
+    size_t measurementLength = measurement.updateVector_.size();
+    for (size_t i = 0; i < measurementLength; i++)
+    {
+      state_[i] = (measurement.updateVector_[i] ? measurement.measurement_[i] : state_[i]);
+    }
+    // same for covariance
+    for (size_t i = 0; i < measurementLength; i++)
+    {
+      for (size_t j = 0; j < measurementLength; j++)
+      {
+        estimateErrorCovariance_(i, j) =
+            (measurement.updateVector_[i] && measurement.updateVector_[j] ? measurement.covariance_(i, j) :
+                                                                            estimateErrorCovariance_(i, j));
+      }
+      initialized_ = true;
+    }
+    if (delta >= 0.0)
+    {
+      lastMeasurementTime_ = measurement.time_;
+    }
+    FB_DEBUG("------ /FilterBase::processMeasurement (" << measurement.topicName_ << ") -------\n");
   }
+}
 
-  void FilterBase::setControlParams(const std::vector<int>& updateVector, const double controlTimeout,
-      const std::vector<double> &accelerationLimits, const std::vector<double> &accelerationGains,
-      const std::vector<double> &decelerationLimits, const std::vector<double> &decelerationGains) {
-        useControl_ = true;
-        controlTimeout_ = controlTimeout;
-        controlUpdateVector_ = updateVector;
-        accelerationLimits_ = accelerationLimits;
-        accelerationGains_ = accelerationGains;
-        decelerationLimits_ = decelerationLimits;
-        decelerationGains_ = decelerationGains;
-      }
+void FilterBase::setControl(const Eigen::VectorXd &control, const double controlTime)
+{
+  latestControl_ = control;
+  latestControlTime_ = controlTime;
+}
 
-  void FilterBase::setDebug(const bool debug, std::ostream *outStream) {
-    if (debug) {
-      if (outStream != nullptr) {
-        debugStream_ = outStream;
-        debug_ = true;
-      } else {
-        debug_ = false;
-      }
-    } else {
+void FilterBase::setControlParams(const std::vector<int> &updateVector, const double controlTimeout,
+                                  const std::vector<double> &accelerationLimits,
+                                  const std::vector<double> &accelerationGains,
+                                  const std::vector<double> &decelerationLimits,
+                                  const std::vector<double> &decelerationGains)
+{
+  useControl_ = true;
+  controlTimeout_ = controlTimeout;
+  controlUpdateVector_ = updateVector;
+  accelerationLimits_ = accelerationLimits;
+  accelerationGains_ = accelerationGains;
+  decelerationLimits_ = decelerationLimits;
+  decelerationGains_ = decelerationGains;
+}
+
+void FilterBase::setDebug(const bool debug, std::ostream *outStream)
+{
+  if (debug)
+  {
+    if (outStream != nullptr)
+    {
+      debugStream_ = outStream;
+      debug_ = true;
+    }
+    else
+    {
       debug_ = false;
     }
   }
-
-  void FilterBase::setUseDynamicProcessNoiseCovariance(const bool useDynamicProcessNoiseCovariance) {
-    useDynamicProcessNoiseCovariance_ = useDynamicProcessNoiseCovariance; 
+  else
+  {
+    debug_ = false;
   }
+}
 
-  void FilterBase::setEstimateErrorCovariance(const Eigen::MatrixXd &estimateErrorCovariance) {
-    estimateErrorCovariance_ = estimateErrorCovariance;
-  }
+void FilterBase::setUseDynamicProcessNoiseCovariance(const bool useDynamicProcessNoiseCovariance)
+{
+  useDynamicProcessNoiseCovariance_ = useDynamicProcessNoiseCovariance;
+}
 
-  void FilterBase::setLastMeasurementTime(const double lastMeasurementTime) {
-    lastMeasurementTime_ = lastMeasurementTime;
-  }
+void FilterBase::setEstimateErrorCovariance(const Eigen::MatrixXd &estimateErrorCovariance)
+{
+  estimateErrorCovariance_ = estimateErrorCovariance;
+}
 
-  void FilterBase::setProcessNoiseCovariance(const Eigen::MatrixXd &processNoiseCovariance) {
-    processNoiseCovariance_ = processNoiseCovariance;
-    dynamicProcessNoiseCovariance_ = processNoiseCovariance_;
-  }
-  
-  void FilterBase::setSensorTimeout(const double sensorTimeout) {
-    sensorTimeout_ = sensorTimeout;
-  }
+void FilterBase::setLastMeasurementTime(const double lastMeasurementTime)
+{
+  lastMeasurementTime_ = lastMeasurementTime;
+}
 
-  void FilterBase::setState(const Eigen::VectorXd &state) {
-    state_ = state;
-  }
+void FilterBase::setProcessNoiseCovariance(const Eigen::MatrixXd &processNoiseCovariance)
+{
+  processNoiseCovariance_ = processNoiseCovariance;
+  dynamicProcessNoiseCovariance_ = processNoiseCovariance_;
+}
 
-  void FilterBase::validateDelta(double &delta) {
-      // this handles issues with ROS time when use_sim_time is on and we're playing from bags.
-      if (delta > 100000.0) {
-        FB_DEBUG("Delta was very large. Suspect playing from bag file. Setting to 0.01\n");
-        delta = 0.01;
-      }
-  }
+void FilterBase::setSensorTimeout(const double sensorTimeout)
+{
+  sensorTimeout_ = sensorTimeout;
+}
 
-  void FilterBase::prepareControl(const double referenceTime, const double predictionDelta) {
-    controlAcceleration_.setZero();
-    if (useControl_) {
-      bool timedOut = ::fabs(referenceTime - latestControlTime_) >= controlTimeout_;
-      if (timedOut) {
-        FB_DEBUG("Control timed out. Reference time was " << referenceTime << ", latest control time was " << 
-            latestControlTime_ << ", control timeout was " << controlTimeout_ << "\n");
-      }
-      for (size_t controlInd = 0; controlInd < TWIST_SIZE; controlInd++) {
-        if (controlUpdateVector_[controlInd]) {
-          controlAcceleration_(controlInd) = computeControlAcceleration(state_(controlInd+POSITION_V_OFFSET), 
-                  (timedOut ? 0.0 : latestControl_(controlInd)), accelerationLimits_[controlInd], accelerationGains_[controlInd], 
-                  decelerationLimits_[controlInd], decelerationGains_[controlInd]);
-        }
+void FilterBase::setState(const Eigen::VectorXd &state)
+{
+  state_ = state;
+}
+
+void FilterBase::validateDelta(double &delta)
+{
+  // this handles issues with ROS time when use_sim_time is on and we're playing from bags.
+  if (delta > 100000.0)
+  {
+    FB_DEBUG("Delta was very large. Suspect playing from bag file. Setting to 0.01\n");
+    delta = 0.01;
+  }
+}
+
+void FilterBase::prepareControl(const double referenceTime, const double predictionDelta)
+{
+  controlAcceleration_.setZero();
+  if (useControl_)
+  {
+    bool timedOut = ::fabs(referenceTime - latestControlTime_) >= controlTimeout_;
+    if (timedOut)
+    {
+      FB_DEBUG("Control timed out. Reference time was " << referenceTime << ", latest control time was "
+                                                        << latestControlTime_ << ", control timeout was "
+                                                        << controlTimeout_ << "\n");
+    }
+    for (size_t controlInd = 0; controlInd < TWIST_SIZE; controlInd++)
+    {
+      if (controlUpdateVector_[controlInd])
+      {
+        controlAcceleration_(controlInd) = computeControlAcceleration(
+            state_(controlInd + POSITION_V_OFFSET), (timedOut ? 0.0 : latestControl_(controlInd)),
+            accelerationLimits_[controlInd], accelerationGains_[controlInd], decelerationLimits_[controlInd],
+            decelerationGains_[controlInd]);
       }
     }
   }
+}
 
-  void FilterBase::wrapStateAngles() {
-    state_(StateMemberRoll) = FilterUtilities::clampRotation(state_(StateMemberRoll));
-    state_(StateMemberPitch) = FilterUtilities::clampRotation(state_(StateMemberPitch));
-    state_(StateMemberYaw) = FilterUtilities::clampRotation(state_(StateMemberYaw));
+void FilterBase::wrapStateAngles()
+{
+  state_(StateMemberRoll) = FilterUtilities::clampRotation(state_(StateMemberRoll));
+  state_(StateMemberPitch) = FilterUtilities::clampRotation(state_(StateMemberPitch));
+  state_(StateMemberYaw) = FilterUtilities::clampRotation(state_(StateMemberYaw));
+}
+
+bool FilterBase::checkMahalanobisThreshold(const Eigen::VectorXd &innovation, const Eigen::MatrixXd &invCovariance,
+                                           const double nsigmas)
+{
+  double sqMahalanobis = innovation.dot(invCovariance * innovation);
+  double threshold = nsigmas * nsigmas;
+
+  if (sqMahalanobis >= threshold)
+  {
+    FB_DEBUG("Innovation mahalanobis distance test failed. Squared mahalanobis is : "
+             << sqMahalanobis << "\n"
+             << "Threshold is : " << threshold << "\n"
+             << "Innovation is : " << innovation << "\n"
+             << "Innovation covariance is : \n"
+             << invCovariance << "\n");
+    return false;
   }
+  return true;
+}
 
-  bool FilterBase::checkMahalanobisThreshold(const Eigen::VectorXd &innovation,
-                                              const Eigen::MatrixXd &invCovariance,
-                                                const double nsigmas) {
-    double sqMahalanobis = innovation.dot(invCovariance * innovation);
-    double threshold = nsigmas * nsigmas;
-
-    if (sqMahalanobis >= threshold) {
-      FB_DEBUG("Innovation mahalanobis distance test failed. Squared mahalanobis is : " << sqMahalanobis << "\n" << 
-                "Threshold is : " << threshold << "\n" << 
-                "Innovation is : " << innovation << "\n" <<
-                "Innovation covariance is : \n" << invCovariance << "\n");
-      return false;
-    }
-    return true;
-  }
-
-} // namespace SensorFusion
+}  // namespace SensorFusion
