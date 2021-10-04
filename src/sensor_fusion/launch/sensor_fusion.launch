@@ -1,0 +1,7 @@
+<launch>
+
+  <node name="sensor_fusion" pkg="sensor_fusion" type="sensor_fusion" >
+    <rosparam command="load" file="$(find sensor_fusion)/config/robot_localization.yaml"/>
+  </node>
+
+</launch>
