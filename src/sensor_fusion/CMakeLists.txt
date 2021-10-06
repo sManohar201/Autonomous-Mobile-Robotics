@@ -179,26 +179,26 @@ include_directories(
 link_directories(${YAML_CPP_LIBRARY_DIRS})
 
 ## Declare a C++ library
-add_library(filter_utilities src/filter_utilities.cpp)
-add_library(filter_base src/filter_base.cpp)
-add_library(ekf src/ekf.cpp)
-add_library(ros_filter_utilities src/ros_filter_utilities.cpp)
-add_library(ros_filter src/ros_filter.cpp)
+# add_library(filter_utilities src/filter_utilities.cpp)
+# add_library(filter_base src/filter_base.cpp)
+# add_library(ekf src/ekf.cpp)
+# add_library(ros_filter_utilities src/ros_filter_utilities.cpp)
+# add_library(ros_filter src/ros_filter.cpp)
 
-# Executables
-add_executable(ekf_node src/ekf_node.cpp)
+# # Executables
+# add_executable(ekf_node src/ekf_node.cpp)
 
-# dependencies
-add_dependencies(filter_base ${PROJECT_NAME}_gencpp)
+# # dependencies
+# add_dependencies(filter_base ${PROJECT_NAME}_gencpp)
 
-# linking
-target_link_libraries(ros_filter_utilities ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})
-target_link_libraries(filter_utilities ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})
-target_link_libraries(filter_base filter_utilities ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})
-target_link_libraries(ekf filter_base ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})
-target_link_libraries(ros_filter ekf ros_filter_utilities ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})
-target_link_libraries(ekf_node ros_filter ${catkin_LIBRARIES})
-## Add cmake target dependencies of the library
+# # linking
+# target_link_libraries(ros_filter_utilities ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})
+# target_link_libraries(filter_utilities ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})
+# target_link_libraries(filter_base filter_utilities ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})
+# target_link_libraries(ekf filter_base ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})
+# target_link_libraries(ros_filter ekf ros_filter_utilities ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})
+# target_link_libraries(ekf_node ros_filter ${catkin_LIBRARIES})
+# ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
