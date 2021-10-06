@@ -24,4 +24,5 @@ Sensor fusion in the context of robot localization. This package takes in contin
 - <b>Red line</b> - filtered path
 - <b>Darkish Yellow line</b> - ground truth
 - <b>Green link</b> - odometry data
+
 It is evident that when the robot keeps a straight line the filtered path in red is close to the ground truth in yellow. But as soon as the robot perfoms a rotational maneuver the filtered path deviates from the ground truth. Nonetheless, the filtered path represents the position of the robot far better than the raw odometry data in green. 
