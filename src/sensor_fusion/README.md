@@ -19,4 +19,4 @@ Sensor fusion in the context of robot localization. This package takes in contin
     - `/ekf_path ( nav_msgs/Path )` - ekf filtered data stringed together as path history.
 
 ### Preview of sensor fusion working with the custom robot automaton.
-
+<img height="550" width="800" src="resources/anim.gif">
