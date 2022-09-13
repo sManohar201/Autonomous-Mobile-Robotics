@@ -1,9 +1,9 @@
 # Autonomous-Mobile-Robotics
-This repository contains from the scratch ROS implementation of robot autonomy algorithms.  
+This repository contains from the scratch implementation of robot autonomy algorithms in ROS2 foxy.  
 ---
 ### System requirements
 1. Ubuntu 20.04 LTS
-2. ROS Noetic 
+2. ROS2 Foxy
 ---
 ### Installation steps
 
@@ -22,17 +22,16 @@ This repository contains from the scratch ROS implementation of robot autonomy a
 5. Path Planning
 ---
 ### TODO: Perception
-- [x] combine front and rear laser into a single source of laser data.
 - [ ] feature extraction algorithm, line, blobs, and corners for now.
 - [ ] data association for slam and localization.
 - [ ] Observation model
 
 ### TODO: Sensor Fusion
-- [x] base template for sensor fusion
-- [x] Implement EKF
+- [ ] base template for sensor fusion
+- [ ] Implement EKF
 - [ ] Implement UKF
-- [x] Compare performance between sensor fusion package and robot_pose_ekf package
-- [x] odometry to trajcetory package to compare how odom estimates drift from true state values. 
+- [ ] Compare performance between sensor fusion package and robot_pose_ekf package
+- [ ] odometry to trajcetory package to compare how odom estimates drift from true state values. 
 
 ### TODO: Localization
 - [ ] Iterative closest point (should I move this to perception)
@@ -40,7 +39,7 @@ This repository contains from the scratch ROS implementation of robot autonomy a
 - [ ] Monte Carlo Localization.
 
 ### TODO: SLAM
-- [X] Occupancy grid mapping (half done improve bresenham rasterisation algorithm)
+- [ ] Occupancy grid mapping (half done improve bresenham rasterisation algorithm)
 - [ ] EKF slam with unknown correspondencies.
 
 ### TODO: Path Planning
