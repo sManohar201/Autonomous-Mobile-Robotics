@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <robot>
 
-    <gazebo>
+    <!-- <gazebo>
         <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
             <robotNamespace>/</robotNamespace>
         </plugin>
-    </gazebo>
+    </gazebo> -->
 
     <gazebo reference="automaton">
       <static>false</static>
@@ -19,7 +19,7 @@
         <turnGravityOff>false</turnGravityOff>
     </gazebo>
 
-    <gazebo reference="imu_link">
+    <!-- <gazebo reference="imu_link">
       <turnGravityOff>false</turnGravityOff>
     </gazebo>
 
@@ -49,6 +49,6 @@
         <headingDrift>0.005</headingDrift>
         <headingGaussianNoise>0.005</headingGaussianNoise>
       </plugin>
-    </gazebo>
+    </gazebo> -->
    
 </robot>

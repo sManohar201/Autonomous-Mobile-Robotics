@@ -57,7 +57,7 @@
             </inertial>
         </link> 
 
-        <gazebo reference="${prefix}_wheel_link">
+        <!-- <gazebo reference="${prefix}_wheel_link">
             <material>
                 Gazebo/DarkGrey 
             </material>
@@ -67,7 +67,7 @@
             <kp value="10000000.0" />
             <kd value="1" />
             <fdir1 value="1 0 0 " />
-        </gazebo>
+        </gazebo> -->
 
         <joint name="${prefix}_wheel_joint" type="continuous">
             <xacro:insert_block name="blah"/>
@@ -76,7 +76,7 @@
             <axis xyz="0.0 1 0.0"/>
         </joint>
 
-        <transmission name="${prefix}_wheel_trans" >
+        <!-- <transmission name="${prefix}_wheel_trans" >
             <type>transmission_interface/SimpleTransmission</type>
             <joint name="${prefix}_wheel_joint">
                 <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
@@ -85,7 +85,7 @@
                 <hardwareInterface>hardware_interface/VelocityInterface</hardwareInterface>
                 <mechanicalReduction>1</mechanicalReduction>
             </actuator>
-        </transmission>
+        </transmission> -->
     </xacro:macro>
 
     <link name="base_link"></link>
@@ -128,17 +128,17 @@
         <origin xyz="${-wheel_base/2} ${-track_width/2} ${wheel_vertical_offset}" rpy="0.0 0.0 0.0"/>
     </xacro:wheel>
 
-    <link name="imu_link">
+    <!-- <link name="imu_link">
       <interial>
         <mass value="0.001"/>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <inertia ixx="${dummy_inertia}" ixy="0.0" ixz="0.0" iyy="${dummy_inertia}" iyz="0.0" izz="${dummy_inertia}"/>
       </interial>
-    </link>
-    <joint name="imu_joint" type="fixed">
+    </link> -->
+    <!-- <joint name="imu_joint" type="fixed">
       <parent link="chassis_link"/>
       <child link="imu_link"/>
-    </joint>
+    </joint> -->
 
     <link name="front_mount"/>
     <joint name="front_mount_joint" type="fixed">
@@ -147,15 +147,15 @@
       <origin xyz="${chassis_length/2.2} 0.0 ${chassis_height}" rpy="0.0 0.0 0.0"/>
     </joint>
     
-    <link name="rear_mount"/>
+    <!-- <link name="rear_mount"/>
     <joint name="rear_mount_joint" type="fixed">
       <parent link="chassis_link"/>
       <child link="rear_mount"/>
       <origin xyz="${-chassis_length/2.2} 0.0 ${chassis_height}" rpy="0.0 0.0 ${-PI}"/>
-    </joint>
+    </joint> -->
 
     <xacro:hokuyo_ust10 prefix="front" mount="front_mount" />
-    <xacro:hokuyo_ust10 prefix="rear" mount="rear_mount" />
+    <!-- <xacro:hokuyo_ust10 prefix="rear" mount="rear_mount" /> -->
      
     
 </robot>
