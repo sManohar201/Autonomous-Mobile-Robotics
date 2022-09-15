@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+<robot name="automaton" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:include filename="$(find robot_description)/urdf/automaton.gazebo" />
+    <xacro:include filename="$(find robot_description)/urdf/laser.urdf.xacro" />
+
+    <xacro:property name="PI" value="3.14159"/>
+
+    <xacro:property name="wheel_base" value="0.262"/>
+    <xacro:property name="track_width" value="0.37559"/>
+    <xacro:property name="wheel_vertical_offset" value="0.0345"/>
+    <xacro:property name="footprint_vertical_offset" value="-0.0655"/>
+    
+    <xacro:property name="wheel_mass" value="0.477"/>
+    <xacro:property name="wheel_radius" value="0.098"/>
+    <xacro:property name="wheel_width" value="0.040"/>
+    
+    <xacro:property name="chassis_length" value="0.420"/>
+    <xacro:property name="chassis_width" value="0.310"/>
+    <xacro:property name="chassis_height" value="0.184"/>
+    
+    <xacro:property name="dummy_inertia" value="1e-09"/>
+    <xacro:property name="mount_spacing" value="0.120"/>
+
+    <material name="dark_grey">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+    </material> 
+    <material name="light_grey">
+        <color rgba="0.4 0.4 0.4 1.0"/>
+    </material>
+    <material name="Red">
+        <color rgba="0.8 0 0.0 1.0"/>
+    </material>
+    <material name="black">
+        <color rgba="0.15 0.15 0.15 1.0"/>
+    </material>
+
+    <xacro:macro name="wheel" params="prefix *blah">
+        <link name="${prefix}_wheel_link">
+            <visual>
+                <origin xyz="0.0 0.0 0.0" rpy="${PI/2} 0.0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find automaton_description)/meshes/wheel.stl" />
+                </geometry> 
+                <material name="black" />
+            </visual> 
+            <collision>
+                <origin xyz="0.0 0.0 0.0" rpy="${PI/2} 0.0 0.0"/>
+                <geometry>
+                    <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+                </geometry> 
+            </collision>
+            <inertial>
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                <mass value="${wheel_mass}"/>
+                <inertia ixx="0.0013" ixy="0.0" ixz="0.0" iyy="0.0024" iyz="0.0" izz="0.0013"/>
+            </inertial>
+        </link> 
+
+        <gazebo reference="${prefix}_wheel_link">
+            <material>
+                Gazebo/DarkGrey 
+            </material>
+            <selfCollide>false</selfCollide>
+            <mu1 value="0.5" /> 
+            <mu2 value="0.5" />
+            <kp value="10000000.0" />
+            <kd value="1" />
+            <fdir1 value="1 0 0 " />
+        </gazebo>
+
+        <joint name="${prefix}_wheel_joint" type="continuous">
+            <xacro:insert_block name="blah"/>
+            <parent link="chassis_link"/>
+            <child link="${prefix}_wheel_link"/>
+            <axis xyz="0.0 1 0.0"/>
+        </joint>
+
+        <transmission name="${prefix}_wheel_trans" >
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="${prefix}_wheel_joint">
+                <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="${prefix}_actuator">
+                <hardwareInterface>hardware_interface/VelocityInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+    </xacro:macro>
+
+    <link name="base_link"></link>
+    <link name="chassis_link">
+        <inertial>
+            <origin xyz="0.012 0.002 0.067" rpy="0.0 0.0 0.0"/>
+            <mass value="16.523"/>
+            <inertia ixx="0.3136" ixy="-0.0008" ixz="0.0164" iyy="0.3922" iyz="-0.0009" izz="0.4485"/>
+        </inertial>
+        <visual>
+            <origin xyz="0.0 0.0 ${footprint_vertical_offset}" rpy="${PI/2} 0.0 ${PI/2}"/>
+            <geometry>
+                <mesh filename="file://$(find automaton_description)/meshes/base.stl"/> 
+            </geometry>
+            <material name="Red" />
+        </visual>
+        <collision>
+            <origin xyz="0.0 0.0 ${chassis_height/2}" rpy="0.0 0.0 0.0"/>
+            <geometry>
+                <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="base_chassis_joint" type="fixed">
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="chassis_link"/>
+    </joint>
+
+    <xacro:wheel prefix="front_left">
+        <origin xyz="${wheel_base/2} ${track_width/2} ${wheel_vertical_offset}" rpy="0.0 0.0 0.0"/>
+    </xacro:wheel>
+    <xacro:wheel prefix="front_right">
+        <origin xyz="${wheel_base/2} ${-track_width/2} ${wheel_vertical_offset}" rpy="0.0 0.0 0.0"/>
+    </xacro:wheel>
+    <xacro:wheel prefix="rear_left">
+        <origin xyz="${-wheel_base/2} ${track_width/2} ${wheel_vertical_offset}" rpy="0.0 0.0 0.0"/>
+    </xacro:wheel>
+    <xacro:wheel prefix="rear_right">
+        <origin xyz="${-wheel_base/2} ${-track_width/2} ${wheel_vertical_offset}" rpy="0.0 0.0 0.0"/>
+    </xacro:wheel>
+
+    <link name="imu_link">
+      <interial>
+        <mass value="0.001"/>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <inertia ixx="${dummy_inertia}" ixy="0.0" ixz="0.0" iyy="${dummy_inertia}" iyz="0.0" izz="${dummy_inertia}"/>
+      </interial>
+    </link>
+    <joint name="imu_joint" type="fixed">
+      <parent link="chassis_link"/>
+      <child link="imu_link"/>
+    </joint>
+
+    <link name="front_mount"/>
+    <joint name="front_mount_joint" type="fixed">
+      <parent link="chassis_link"/>
+      <child link="front_mount"/>
+      <origin xyz="${chassis_length/2.2} 0.0 ${chassis_height}" rpy="0.0 0.0 0.0"/>
+    </joint>
+    
+    <link name="rear_mount"/>
+    <joint name="rear_mount_joint" type="fixed">
+      <parent link="chassis_link"/>
+      <child link="rear_mount"/>
+      <origin xyz="${-chassis_length/2.2} 0.0 ${chassis_height}" rpy="0.0 0.0 ${-PI}"/>
+    </joint>
+
+    <xacro:hokuyo_ust10 prefix="front" mount="front_mount" />
+    <!-- <xacro:hokuyo_ust10 prefix="rear" mount="rear_mount" /> -->
+    
+    <ros2_control name="automaton_hardware" type="system">
+      <hardware>
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </hardware>
+      <joint name="front_left_wheel_joint">
+        <state_interface name="position" />
+        <command_interface name="velocity"></command_interface>
+      </joint>
+      <joint name="front_right_wheel_joint">
+        <state_interface name="position" />
+        <command_interface name="velocity"></command_interface>
+      </joint>
+      <joint name="rear_left_wheel_joint">
+        <state_interface name="position" />
+        <command_interface name="velocity"></command_interface>
+      </joint>
+      <joint name="rear_right_wheel_joint">
+        <state_interface name="position" />
+        <command_interface name="velocity"></command_interface>
+      </joint>
+    </ros2_control>
+
+    <gazebo>
+      <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+        <parameters>$(find automaton_control)/config/control.yaml</parameters>
+      </plugin>
+    </gazebo>
+    
+</robot>
