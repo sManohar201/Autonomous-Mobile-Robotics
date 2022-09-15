@@ -1,6 +1,7 @@
 # Autonomous-Mobile-Robotics
-This repository contains from the scratch implementation of robot autonomy algorithms in ROS2 foxy.  
----
+This repository contains from the scratch implementation of robot autonomy algorithms in ROS2 foxy (I have abandonded my previous work with ROS1(ros-noetic branch)).  
+
+--
 ### System requirements
 1. Ubuntu 20.04 LTS
 2. ROS2 Foxy
