@@ -29,6 +29,7 @@ find_package(xacro REQUIRED)
 install(
   DIRECTORY
     launch
+    worlds
   DESTINATION
     share/${PROJECT_NAME}
 )
