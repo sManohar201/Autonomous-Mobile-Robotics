@@ -28,7 +28,7 @@ find_package(automaton_description REQUIRED)
 install(
   DIRECTORY
     launch
-    config
+    rviz 
   DESTINATION
     share/${PROJECT_NAME}
 )
