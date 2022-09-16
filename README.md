@@ -8,11 +8,10 @@ This repository contains from the scratch implementation of robot autonomy algor
 ---
 ### Installation steps
 
-- `sudo apt-get install ros-noetic-hector*`
-- `git clone git@github.com:sManohar201/Autonomous-Mobile-Robotics.git`
+- `git clone -b ros2-foxy git@github.com:sManohar201/Autonomous-Mobile-Robotics.git`
 - `cd Autonomous-Mobile-Robotics`
-- `catkin_make` or `catkin build`
-- `source devel/setup.bash`
+- `colcon build --symlink-install`
+- `source install/setup.bash`
 
 ---
 ### List of topics covered in the course
