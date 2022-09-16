@@ -14,7 +14,7 @@
   <depend>gazebo_ros2_control</depend>
   <depend>automaton_control</depend>
   <depend>automaton_description</depend>
-  <depend>ros2launch</depend>
+  <!-- <depend>ros2launch</depend> -->
   <depend>urdf</depend>
   <depend>xacro</depend>
 

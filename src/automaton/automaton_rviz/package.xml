@@ -10,12 +10,12 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>automaton_description</depend>
-  <depend>joint_state_publisher</depend>
-  <depend>joint_state_publisher_gui</depend>
-  <depend>rqt_console</depend>
-  <depend>rqt_gui</depend>
-  <depend>rqt_robot_mointor</depend>
-  <depend>rviz</depend>
+  <!-- <depend>joint_state_publisher</depend> -->
+  <!-- <depend>joint_state_publisher_gui</depend> -->
+  <!-- <depend>rqt_console</depend> -->
+  <!-- <depend>rqt_gui</depend> -->
+  <!-- <depend>rqt_robot_mointor</depend> -->
+  <!-- <depend>rviz</depend> -->
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
