@@ -22,9 +22,16 @@ find_package(gazebo_ros REQUIRED)
 find_package(gazebo_ros2_control REQUIRED)
 find_package(automaton_control REQUIRED)
 find_package(automaton_description REQUIRED)
-find_package(ros2launch REQUIRED)
+# find_package(ros2launch REQUIRED)
 find_package(urdf REQUIRED)
 find_package(xacro REQUIRED)
+
+install(
+  DIRECTORY
+    launch
+  DESTINATION
+    share/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

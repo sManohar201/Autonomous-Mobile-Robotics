@@ -18,13 +18,20 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(automaton_description REQUIRED)
-find_package(joint_state_publisher REQUIRED)
-find_package(joint_state_publisher_gui REQUIRED)
-find_package(rqt_console REQUIRED)
-find_package(rqt_gui REQUIRED)
-find_package(rqt_robot_mointor REQUIRED)
-find_package(rviz REQUIRED)
+# find_package(joint_state_publisher REQUIRED)
+# find_package(joint_state_publisher_gui REQUIRED)
+# find_package(rqt_console REQUIRED)
+# find_package(rqt_gui REQUIRED)
+# find_package(rqt_robot_mointor REQUIRED)
+# find_package(rviz REQUIRED)
 
+install(
+  DIRECTORY
+    launch
+    config
+  DESTINATION
+    share/${PROJECT_NAME}
+)
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights

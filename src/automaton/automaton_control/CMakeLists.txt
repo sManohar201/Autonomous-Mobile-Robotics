@@ -26,6 +26,13 @@ find_package(joint_trajectory_controller REQUIRED)
 find_package(robot_state_publisher REQUIRED)
 find_package(teleop_twist_joy REQUIRED)
 
+install(
+  DIRECTORY
+    config
+  DESTINATION
+    share/${PROJECT_NAME}
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights

@@ -21,6 +21,14 @@ find_package(urdf REQUIRED)
 find_package(xacro REQUIRED)
 find_package(robot_state_publisher REQUIRED)
 
+install(
+  DIRECTORY
+    meshes
+    urdf
+  DESTINATION
+    share/${PROJECT_NAME}
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
