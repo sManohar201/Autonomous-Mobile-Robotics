@@ -1,6 +1,7 @@
 # permanent file to ignore
 .vscode
 .catkin_workspace
+.catkin_tools
 # ros build files 
 build
 install
