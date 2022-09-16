@@ -1,12 +1,10 @@
 # permanent file to ignore
-.catkin_tools/profiles/default/devel_collisions.txt
-.catkin_tools/
-.catkin_workspace
 .vscode
+.catkin_workspace
 # ros build files 
 build
-devel
-logs
+install
+log
 
 # temporary files
 rosgraph.png
