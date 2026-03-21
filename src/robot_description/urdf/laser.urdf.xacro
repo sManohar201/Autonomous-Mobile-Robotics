@@ -1,22 +1,38 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  
-  <xacro:macro name="hokuyo_ust10" params="prefix mount update_rate:=50 sample_size:=720 min_angle:=-2.35619 max_angle:=2.35619 min_range:=0.1 max_range:=30.0 robot_namespace:=/ ">
+
+  <!-- ===================================================================
+       Hokuyo UST-10 LiDAR macro — Gazebo Harmonic version.
+
+       Gazebo Classic used libgazebo_ros_laser.so which embedded ROS
+       publishing directly in the plugin.
+
+       Gazebo Harmonic separates concerns:
+       1. The <sensor type="gpu_lidar"> block defines the physics/sim sensor.
+          It publishes on a gz topic (e.g. /front_laser/scan).
+       2. ros_gz_bridge (launched in gazebo.launch.py) bridges that gz topic
+          to a ROS2 sensor_msgs/msg/LaserScan topic of the same name.
+
+       The Sensors system plugin in automaton_world.sdf enables all sensors.
+       =================================================================== -->
+
+  <xacro:macro name="hokuyo_ust10" params="prefix mount update_rate:=50 sample_size:=720 min_angle:=-2.35619 max_angle:=2.35619 min_range:=0.1 max_range:=30.0 robot_namespace:=/">
 
     <link name="${prefix}_laser">
       <inertial>
-        <mass value="1.1" />
-        <origin xyz="0 0 0" />
-        <inertia ixx="${0.0833333 * 1.1 * (0.102*0.102 + 0.152*0.152)}" ixy="0.0" ixz="0.0"
+        <mass value="1.1"/>
+        <origin xyz="0 0 0"/>
+        <inertia
+          ixx="${0.0833333 * 1.1 * (0.102*0.102 + 0.152*0.152)}" ixy="0.0" ixz="0.0"
           iyy="${0.0833333 * 1.1 * (0.105*0.105 + 0.152*0.152)}" iyz="0.0"
-          izz="${0.0833333 * 1.1 * (0.105*0.105 + 0.102*0.102)}" />
+          izz="${0.0833333 * 1.1 * (0.105*0.105 + 0.102*0.102)}"/>
       </inertial>
       <visual>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
         <geometry>
-          <mesh filename="package://robot_description/meshes/hokuyo_ust10_lidar.stl" />
+          <mesh filename="package://robot_description/meshes/hokuyo_ust10_lidar.stl"/>
         </geometry>
-        <material name="dark_grey" />
+        <material name="dark_grey"/>
       </visual>
     </link>
 
@@ -25,14 +41,19 @@
       <child link="${prefix}_laser"/>
       <origin xyz="0.0 0.0 0.007" rpy="0.0 0.0 0.0"/>
     </joint>
-    
+
+    <!-- Gazebo Harmonic: gpu_lidar sensor.
+         Topic is published in the gz domain. The launch file bridges it to ROS2.
+         gz topic:  /${prefix}_laser/scan  (gz.msgs.LaserScan)
+         ROS2 topic: /${prefix}_laser/scan  (sensor_msgs/msg/LaserScan) -->
     <gazebo reference="${prefix}_laser">
-      <turnGravityOff>false</turnGravityOff>
-      <sensor type="ray" name="${prefix}_laser">
-        <pose>0 0 0 0 0 0</pose>
-        <visualize>false</visualize>
+      <material>Gazebo/DarkGrey</material>
+      <sensor name="${prefix}_lidar" type="gpu_lidar">
+        <topic>/${prefix}_laser/scan</topic>
+        <gz_frame_id>${prefix}_laser</gz_frame_id>
         <update_rate>${update_rate}</update_rate>
-        <ray>
+        <visualize>false</visualize>
+        <lidar>
           <scan>
             <horizontal>
               <samples>${sample_size}</samples>
@@ -51,20 +72,11 @@
             <mean>0.0</mean>
             <stddev>0.001</stddev>
           </noise>
-        </ray>
-        <plugin name="gazebo_ros_laser" filename="libgazebo_ros_laser.so">
-          <topicName>${prefix}_laser/scan</topicName>
-          <frameName>${prefix}_laser</frameName>
-          <robotNamespace>${robot_namespace}</robotNamespace>
-        </plugin>
+        </lidar>
+        <always_on>1</always_on>
       </sensor>
     </gazebo>
 
-    <gazebo reference="${prefix}_laser">
-      <material>
-        Gazebo/DarkGrey  
-      </material>
-    </gazebo>
   </xacro:macro>
 
 </robot>

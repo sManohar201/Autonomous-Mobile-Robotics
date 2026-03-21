@@ -1,0 +1,74 @@
+<?xml version="1.0" ?>
+<!--
+  Custom Gazebo Harmonic world for the Automaton robot.
+
+  Why we need a custom world instead of the default empty.sdf:
+    The default Gazebo Harmonic worlds do not load the Sensors system plugin,
+    which is required for any sensor simulation (lidar, IMU, camera).
+    We explicitly load all required systems here.
+
+  Systems loaded:
+    Physics           — rigid body dynamics (required for any simulation)
+    UserCommands      — allows model spawning, deletion, etc. via gz transport
+    SceneBroadcaster  — streams scene state to Gazebo GUI and rviz bridge
+    Sensors           — enables sensor simulation (gpu_lidar, imu, etc.)
+    Imu               — required alongside Sensors for IMU sensor type
+-->
+<sdf version="1.8">
+  <world name="default">
+
+    <!-- Core simulation systems -->
+    <plugin filename="gz-sim-physics-system"
+            name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system"
+            name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system"
+            name="gz::sim::systems::SceneBroadcaster"/>
+
+    <!-- Sensor simulation — required for gpu_lidar, IMU, cameras -->
+    <plugin filename="gz-sim-sensors-system"
+            name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system"
+            name="gz::sim::systems::Imu"/>
+
+    <!-- Lighting -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Ground plane -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>100 100</size></plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>100 100</size></plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.8 0.8 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
