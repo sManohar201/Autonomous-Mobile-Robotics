@@ -148,6 +148,17 @@ def generate_launch_description():
     #   /topic_name@ros_msg_type[gz_msg_type   (gz → ros, unidirectional)
     #   /topic_name@ros_msg_type]gz_msg_type   (ros → gz, unidirectional)
     #   /topic_name@ros_msg_type@gz_msg_type   (bidirectional)
+    #
+    # NOTE: /joint_states is intentionally NOT bridged here.
+    #   The Gazebo JointStatePublisher plugin publishes gz msgs with
+    #   timestamps that arrive at ROS via DDS with no ordering guarantee.
+    #   When robot_state_publisher receives them slightly out of order it
+    #   sees time go backwards → continuous "Moved backwards in time" spam
+    #   → TF buffer clears → RViz blinks.
+    #   Solution: joint_state_publisher (below) is the sole source —
+    #   a single ROS timer always publishes in strictly increasing sim time.
+    #   Wheel rotation won't be visualised (always 0) until we wire up
+    #   ros2_control in a later step.
 
     bridge = Node(
         package='ros_gz_bridge',
@@ -159,9 +170,23 @@ def generate_launch_description():
             '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
             '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
             '/front_laser/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
-            '/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model',
             # '/imu/data@sensor_msgs/msg/Imu[gz.msgs.IMU',
         ],
+    )
+
+    # --- Joint state publisher -----------------------------------------------
+    # Sole source of /joint_states. Publishes all wheel joints at position 0.
+    # Single ROS timer → strictly monotonic sim-time stamps → no backwards
+    # time jumps in robot_state_publisher.
+
+    joint_state_publisher = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        output='screen',
+        parameters=[{
+            'robot_description': robot_description_content,
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
+        }],
     )
 
     # --- RViz2 ---------------------------------------------------------------
@@ -198,6 +223,7 @@ def generate_launch_description():
         period=5.0,
         actions=[
             robot_state_publisher,
+            joint_state_publisher,
             spawn_robot,
             rviz2,
         ],
