@@ -141,21 +141,6 @@ def generate_launch_description():
         ],
     )
 
-    # --- Joint state publisher -----------------------------------------------
-    # Publishes wheel joint positions at 0 so robot_state_publisher can
-    # compute TF for all links even before Gazebo's JointStatePublisher
-    # plugin is confirmed working.
-
-    joint_state_publisher = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        output='screen',
-        parameters=[{
-            'robot_description': robot_description_content,
-            'use_sim_time': LaunchConfiguration('use_sim_time'),
-        }],
-    )
-
     # --- ros_gz_bridge -------------------------------------------------------
     # Bridges gz transport topics ↔ ROS2 topics.
     #
@@ -198,15 +183,21 @@ def generate_launch_description():
     # massively, flooding the log with "Moved backwards in time" warnings and
     # causing RViz to reset repeatedly.
     #
-    # Fix: delay all ROS nodes by 3 seconds so Gazebo has time to start and
+    # Fix: delay all ROS nodes by 5 seconds so Gazebo has time to start and
     # publish /clock before any node tries to use sim time. The bridge node
     # starts immediately (it doesn't use sim time itself).
+    #
+    # Why NOT joint_state_publisher here:
+    #   Having two joint state sources (this ROS node + the Gazebo bridge)
+    #   causes robot_state_publisher to receive alternating messages with
+    #   slightly different sim time stamps, triggering continuous "moved
+    #   backwards in time" warnings and RViz blinking. The Gazebo
+    #   JointStatePublisher system plugin is the sole source of joint states.
 
     delayed_ros_nodes = TimerAction(
-        period=3.0,
+        period=5.0,
         actions=[
             robot_state_publisher,
-            joint_state_publisher,
             spawn_robot,
             rviz2,
         ],
@@ -219,7 +210,7 @@ def generate_launch_description():
         x_pos,
         y_pos,
         z_pos,
-        gz_sim,                  # start Gazebo immediately
-        bridge,                  # start bridge immediately (no sim time dependency)
-        delayed_ros_nodes,       # start ROS nodes after Gazebo clock is established
+        gz_sim,                  # 1. start Gazebo
+        bridge,                  # 2. start bridge (delivers /clock immediately)
+        delayed_ros_nodes,       # 3. start ROS nodes after clock is established
     ])
