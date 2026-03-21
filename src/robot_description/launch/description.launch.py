@@ -15,6 +15,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -23,10 +24,13 @@ def generate_launch_description():
 
     # Expand the xacro file into a robot_description string at launch time.
     # Command() runs the xacro tool and captures its stdout.
-    robot_description_content = Command([
-        FindExecutable(name='xacro'), ' ',
-        PathJoinSubstitution([pkg_share, 'urdf', 'automaton.urdf.xacro']),
-    ])
+    robot_description_content = ParameterValue(
+        Command([
+            FindExecutable(name='xacro'), ' ',
+            PathJoinSubstitution([pkg_share, 'urdf', 'automaton.urdf.xacro']),
+        ]),
+        value_type=str,
+    )
 
     rviz_config = DeclareLaunchArgument(
         'rviz_config',

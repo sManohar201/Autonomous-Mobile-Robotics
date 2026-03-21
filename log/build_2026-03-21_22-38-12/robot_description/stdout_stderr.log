@@ -1,0 +1,38 @@
+-- Found ament_cmake: 2.5.4 (/opt/ros/jazzy/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Configuring done (1.7s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/build/robot_description
+-- Install configuration: ""
+-- Execute custom install script
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/urdf/automaton.gazebo
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/urdf/automaton.urdf.xacro
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/urdf/laser.urdf.xacro
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/meshes/base.stl
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/meshes/d435.dae
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/meshes/hokuyo_ust10_lidar.stl
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/meshes/wheel.stl
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/launch/description.launch
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/launch/description.launch.py
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/launch/gazebo.launch.py
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/launch/gazebo_automaton.launch
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/rviz_config/automaton.rviz
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/rviz_config/urdf.rviz
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/config/control.yaml
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/worlds/automaton_world.sdf
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/ament_index/resource_index/package_run_dependencies/robot_description
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/ament_index/resource_index/parent_prefix_path/robot_description
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/environment/ament_prefix_path.sh
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/environment/ament_prefix_path.dsv
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/environment/path.sh
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/environment/path.dsv
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/local_setup.bash
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/local_setup.sh
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/local_setup.zsh
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/local_setup.dsv
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/package.dsv
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/ament_index/resource_index/packages/robot_description
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/cmake/robot_descriptionConfig.cmake
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/cmake/robot_descriptionConfig-version.cmake
+-- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/package.xml

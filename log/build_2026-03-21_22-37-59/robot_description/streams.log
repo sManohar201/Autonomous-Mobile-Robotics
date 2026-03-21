@@ -1,0 +1,32 @@
+[0.029s] Invoking command in '/home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/build/robot_description': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/src/robot_description -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description
+[0.232s] -- The C compiler identification is GNU 13.3.0
+[0.460s] -- The CXX compiler identification is GNU 13.3.0
+[0.524s] -- Detecting C compiler ABI info
+[0.829s] -- Detecting C compiler ABI info - done
+[0.874s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.874s] -- Detecting C compile features
+[0.877s] -- Detecting C compile features - done
+[0.909s] -- Detecting CXX compiler ABI info
+[1.261s] -- Detecting CXX compiler ABI info - done
+[1.313s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[1.315s] -- Detecting CXX compile features
+[1.318s] -- Detecting CXX compile features - done
+[1.358s] [31mCMake Error at CMakeLists.txt:4 (find_package):
+[1.358s]   By not providing "Findament_cmake.cmake" in CMAKE_MODULE_PATH this project
+[1.359s]   has asked CMake to find a package configuration file provided by
+[1.359s]   "ament_cmake", but CMake did not find one.
+[1.359s] 
+[1.360s]   Could not find a package configuration file provided by "ament_cmake" with
+[1.360s]   any of the following names:
+[1.361s] 
+[1.361s]     ament_cmakeConfig.cmake
+[1.362s]     ament_cmake-config.cmake
+[1.362s] 
+[1.362s]   Add the installation prefix of "ament_cmake" to CMAKE_PREFIX_PATH or set
+[1.363s]   "ament_cmake_DIR" to a directory containing one of the above files.  If
+[1.363s]   "ament_cmake" provides a separate development package or SDK, be sure it
+[1.363s]   has been installed.
+[1.364s] 
+[1.364s] [0m
+[1.364s] -- Configuring incomplete, errors occurred!
+[1.371s] Invoked command in '/home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/build/robot_description' returned '1': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/src/robot_description -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description
