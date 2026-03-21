@@ -1,0 +1,43 @@
+[0.039s] Invoking command in '/home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/build/robot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/src/robot_description -DCMAKE_INSTALL_PREFIX=/home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description
+[0.092s] -- Found ament_cmake: 2.5.4 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[0.927s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.324s] -- Configuring done (1.3s)
+[1.333s] -- Generating done (0.0s)
+[1.340s] -- Build files have been written to: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/build/robot_description
+[1.347s] Invoked command in '/home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/build/robot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/src/robot_description -DCMAKE_INSTALL_PREFIX=/home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description
+[1.352s] Invoking command in '/home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/build/robot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/build/robot_description -- -j12 -l12
+[1.486s] Invoked command in '/home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/build/robot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/build/robot_description -- -j12 -l12
+[1.520s] Invoking command in '/home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/build/robot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/build/robot_description
+[1.544s] -- Install configuration: ""
+[1.546s] -- Execute custom install script
+[1.547s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/urdf/automaton.gazebo
+[1.548s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/urdf/automaton.urdf.xacro
+[1.548s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/urdf/laser.urdf.xacro
+[1.549s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/meshes/base.stl
+[1.550s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/meshes/d435.dae
+[1.550s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/meshes/hokuyo_ust10_lidar.stl
+[1.551s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/meshes/wheel.stl
+[1.553s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/launch/description.launch
+[1.553s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/launch/description.launch.py
+[1.554s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/launch/gazebo.launch.py
+[1.554s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/launch/gazebo_automaton.launch
+[1.555s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/rviz_config/automaton.rviz
+[1.556s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/rviz_config/urdf.rviz
+[1.557s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/config/control.yaml
+[1.557s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/worlds/automaton_world.sdf
+[1.558s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/ament_index/resource_index/package_run_dependencies/robot_description
+[1.559s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/ament_index/resource_index/parent_prefix_path/robot_description
+[1.560s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/environment/ament_prefix_path.sh
+[1.560s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/environment/ament_prefix_path.dsv
+[1.561s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/environment/path.sh
+[1.562s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/environment/path.dsv
+[1.562s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/local_setup.bash
+[1.563s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/local_setup.sh
+[1.564s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/local_setup.zsh
+[1.564s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/local_setup.dsv
+[1.565s] -- Symlinking: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/package.dsv
+[1.596s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/ament_index/resource_index/packages/robot_description
+[1.597s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/cmake/robot_descriptionConfig.cmake
+[1.598s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/cmake/robot_descriptionConfig-version.cmake
+[1.598s] -- Up-to-date symlink: /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/install/robot_description/share/robot_description/package.xml
+[1.604s] Invoked command in '/home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/build/robot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/sam/work/sensor_fusion_learn/Autonomous-Mobile-Robotics/build/robot_description

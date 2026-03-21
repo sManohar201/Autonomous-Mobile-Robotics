@@ -30,8 +30,17 @@ Topic bridge map (gz ↔ ROS2):
   /clock               Clock           gz→ros
 """
 
+import os
+
+from ament_index_python.packages import get_package_share_directory
+
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import (
+    AppendEnvironmentVariable,
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+    TimerAction,
+)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
     Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
@@ -43,6 +52,23 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     pkg_share = FindPackageShare('robot_description')
+
+    # Resolve the installed package share directory at launch-file-load time.
+    # Used for GZ_SIM_RESOURCE_PATH — must be a plain string, not a substitution.
+    pkg_share_dir = get_package_share_directory('robot_description')
+
+    # --- Fix: mesh URI resolution in Gazebo Harmonic -------------------------
+    # When ros_gz_sim converts the URDF to SDF, it rewrites:
+    #   package://robot_description/meshes/base.stl
+    #     → model://robot_description/meshes/base.stl
+    #
+    # Gazebo then searches for 'robot_description' as a model directory inside
+    # GZ_SIM_RESOURCE_PATH. Adding the parent of our share directory means:
+    #   GZ_SIM_RESOURCE_PATH/robot_description/meshes/base.stl  ← found ✓
+    gz_resource_path = AppendEnvironmentVariable(
+        'GZ_SIM_RESOURCE_PATH',
+        os.path.dirname(pkg_share_dir),  # .../install/robot_description/share
+    )
 
     # --- Arguments -----------------------------------------------------------
 
@@ -60,7 +86,7 @@ def generate_launch_description():
 
     x_pos = DeclareLaunchArgument('x', default_value='0.0')
     y_pos = DeclareLaunchArgument('y', default_value='0.0')
-    z_pos = DeclareLaunchArgument('z', default_value='0.1')  # slight offset to avoid ground collision
+    z_pos = DeclareLaunchArgument('z', default_value='0.1')
 
     # --- Robot description ---------------------------------------------------
 
@@ -85,7 +111,7 @@ def generate_launch_description():
     # --- Gazebo Harmonic ------------------------------------------------------
     # gz_sim.launch.py accepts gz_args which are passed directly to `gz sim`.
     # -r  = run immediately (don't wait for play button)
-    # -v4 = verbosity level 4 (set to 1 in production to reduce noise)
+    # -v3 = verbosity level 3
 
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -119,10 +145,7 @@ def generate_launch_description():
     # Publishes wheel joint positions at 0 so robot_state_publisher can
     # compute TF for all links even before Gazebo's JointStatePublisher
     # plugin is confirmed working.
-    #
-    # When the gz bridge for /joint_states is working, both this node and
-    # the bridge will publish — robot_state_publisher uses the latest message.
-    # At rest (no cmd_vel) both agree at 0, so there is no conflict.
+
     joint_state_publisher = Node(
         package='joint_state_publisher',
         executable='joint_state_publisher',
@@ -146,25 +169,12 @@ def generate_launch_description():
         executable='parameter_bridge',
         output='screen',
         arguments=[
-            # Simulation clock — must be bridged so ROS2 nodes run on sim time
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-
-            # Drive commands: teleop/nav2 publishes ROS2 Twist → gz DiffDrive
             '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
-
-            # Odometry: gz DiffDrive → ROS2 (consumed by EKF later)
             '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-
-            # TF from DiffDrive plugin (odom → base_link)
             '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
-
-            # Front LiDAR scan
             '/front_laser/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
-
-            # Wheel joint states → robot_state_publisher for TF tree
             '/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model',
-
-            # Uncomment when IMU link is re-enabled in URDF:
             # '/imu/data@sensor_msgs/msg/Imu[gz.msgs.IMU',
         ],
     )
@@ -181,16 +191,35 @@ def generate_launch_description():
         parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
     )
 
+    # --- Startup sequencing --------------------------------------------------
+    # Problem: Gazebo sim time starts at t≈0, but ROS nodes using use_sim_time=true
+    # start on wall clock time (~1.7e9 seconds, i.e. year 2026). When the /clock
+    # bridge starts delivering sim time, every node sees time jump backwards
+    # massively, flooding the log with "Moved backwards in time" warnings and
+    # causing RViz to reset repeatedly.
+    #
+    # Fix: delay all ROS nodes by 3 seconds so Gazebo has time to start and
+    # publish /clock before any node tries to use sim time. The bridge node
+    # starts immediately (it doesn't use sim time itself).
+
+    delayed_ros_nodes = TimerAction(
+        period=3.0,
+        actions=[
+            robot_state_publisher,
+            joint_state_publisher,
+            spawn_robot,
+            rviz2,
+        ],
+    )
+
     return LaunchDescription([
+        gz_resource_path,        # set GZ_SIM_RESOURCE_PATH before anything starts
         use_sim_time,
         world_file,
         x_pos,
         y_pos,
         z_pos,
-        gz_sim,
-        robot_state_publisher,
-        joint_state_publisher,
-        spawn_robot,
-        bridge,
-        rviz2,
+        gz_sim,                  # start Gazebo immediately
+        bridge,                  # start bridge immediately (no sim time dependency)
+        delayed_ros_nodes,       # start ROS nodes after Gazebo clock is established
     ])
