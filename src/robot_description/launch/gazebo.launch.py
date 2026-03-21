@@ -168,7 +168,12 @@ def generate_launch_description():
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
             '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-            '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
+            # /tf intentionally NOT bridged — the DiffDrive plugin publishes
+            # odom→base_link TF with Gazebo sim timestamps over DDS, which
+            # arrive out of order and cause RViz TF buffer time-jump resets.
+            # /odom (the Odometry message) is bridged above and is what the
+            # EKF will consume. The odom→base_link TF will be published by
+            # the diff_drive_controller once ros2_control is wired up.
             '/front_laser/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
             # '/imu/data@sensor_msgs/msg/Imu[gz.msgs.IMU',
         ],
