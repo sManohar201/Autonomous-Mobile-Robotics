@@ -115,6 +115,24 @@ def generate_launch_description():
         ],
     )
 
+    # --- Joint state publisher -----------------------------------------------
+    # Publishes wheel joint positions at 0 so robot_state_publisher can
+    # compute TF for all links even before Gazebo's JointStatePublisher
+    # plugin is confirmed working.
+    #
+    # When the gz bridge for /joint_states is working, both this node and
+    # the bridge will publish — robot_state_publisher uses the latest message.
+    # At rest (no cmd_vel) both agree at 0, so there is no conflict.
+    joint_state_publisher = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        output='screen',
+        parameters=[{
+            'robot_description': robot_description_content,
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
+        }],
+    )
+
     # --- ros_gz_bridge -------------------------------------------------------
     # Bridges gz transport topics ↔ ROS2 topics.
     #
@@ -171,6 +189,7 @@ def generate_launch_description():
         z_pos,
         gz_sim,
         robot_state_publisher,
+        joint_state_publisher,
         spawn_robot,
         bridge,
         rviz2,
