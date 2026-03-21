@@ -39,7 +39,7 @@ Visualization Manager:
         Z: 0
       Plane: XY
       Plane Cell Count: 10
-      Reference Frame: odom
+      Reference Frame: <Fixed Frame>
       Value: true
     - Alpha: 1
       Class: rviz_default_plugins/RobotModel
@@ -227,7 +227,7 @@ Visualization Manager:
       Length: 0.4000000059604645
       Name: Axes
       Radius: 0.10000000149011612
-      Reference Frame: odom
+      Reference Frame: <Fixed Frame>
       Value: true
   Enabled: true
   Global Options:
