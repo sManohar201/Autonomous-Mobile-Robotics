@@ -34,13 +34,14 @@ Topic bridge map (gz ↔ ROS2):
   /joint_states          JointState        gz→ros
 
 World selection (world:=<name> or world:=<full/path/to/world.sdf>):
-  empty        — flat ground plane (default)
-  office       — indoor office with rooms and corridors
-  warehouse    — large open warehouse with shelving
-  construction — outdoor construction site with obstacles
-  orchard      — outdoor orchard rows
-  pipeline     — industrial pipeline environment
-  solar_farm   — open outdoor solar farm
+  empty         — flat ground plane (default)
+  slam_district — large 5-zone world for persistent mapping / loop-closure testing
+  office        — indoor office with rooms and corridors
+  warehouse     — large open warehouse with shelving
+  construction  — outdoor construction site with obstacles
+  orchard       — outdoor orchard rows
+  pipeline      — industrial pipeline environment
+  solar_farm    — open outdoor solar farm
 """
 
 import os
@@ -63,18 +64,19 @@ from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 
-# Short-name → absolute path map for built-in worlds.
-# All clearpath_gz worlds already include Sensors, Imu, and NavSat system
-# plugins, so they work with our gpu_lidar and (future) IMU/GPS sensors.
+# Short-name → filename/path map for built-in worlds.
+# Local world filenames (no leading '/') are resolved relative to our
+# installed share/worlds/ directory.  Absolute paths are used as-is.
 _CLEARPATH_WORLDS = '/opt/ros/jazzy/share/clearpath_gz/worlds'
 _WORLDS = {
-    'empty':        None,  # resolved to our automaton_world.sdf below
-    'office':       f'{_CLEARPATH_WORLDS}/office.sdf',
-    'warehouse':    f'{_CLEARPATH_WORLDS}/warehouse.sdf',
-    'construction': f'{_CLEARPATH_WORLDS}/construction.sdf',
-    'orchard':      f'{_CLEARPATH_WORLDS}/orchard.sdf',
-    'pipeline':     f'{_CLEARPATH_WORLDS}/pipeline.sdf',
-    'solar_farm':   f'{_CLEARPATH_WORLDS}/solar_farm.sdf',
+    'empty':         'automaton_world.sdf',
+    'slam_district': 'slam_district.sdf',
+    'office':        f'{_CLEARPATH_WORLDS}/office.sdf',
+    'warehouse':     f'{_CLEARPATH_WORLDS}/warehouse.sdf',
+    'construction':  f'{_CLEARPATH_WORLDS}/construction.sdf',
+    'orchard':       f'{_CLEARPATH_WORLDS}/orchard.sdf',
+    'pipeline':      f'{_CLEARPATH_WORLDS}/pipeline.sdf',
+    'solar_farm':    f'{_CLEARPATH_WORLDS}/solar_farm.sdf',
 }
 
 
@@ -82,7 +84,8 @@ def _resolve_world(context, pkg_share_dir):
     """Resolve world:= argument — short name or full path."""
     raw = LaunchConfiguration('world').perform(context)
     if raw in _WORLDS:
-        path = _WORLDS[raw] or os.path.join(pkg_share_dir, 'worlds', 'automaton_world.sdf')
+        val = _WORLDS[raw]
+        path = val if val.startswith('/') else os.path.join(pkg_share_dir, 'worlds', val)
     else:
         path = raw  # treat as a full file path
     if not os.path.isfile(path):

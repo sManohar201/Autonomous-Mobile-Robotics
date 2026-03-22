@@ -19,6 +19,15 @@
 <sdf version="1.8">
   <world name="default">
 
+    <!-- Earth reference frame for GPS/NavSat and Magnetometer sensors -->
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <latitude_deg>51.5074</latitude_deg>
+      <longitude_deg>-0.1278</longitude_deg>
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+
     <!-- Core simulation systems -->
     <plugin filename="gz-sim-physics-system"
             name="gz::sim::systems::Physics"/>

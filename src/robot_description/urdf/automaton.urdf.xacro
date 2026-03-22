@@ -173,12 +173,12 @@
       <origin xyz="${chassis_length/2.2} 0.0 ${chassis_height}" rpy="0.0 0.0 0.0"/>
     </joint>
 
-    <!-- 3D LiDAR mount — top-centre of chassis -->
+    <!-- 3D LiDAR mount — centre of robot, raised above 2D lidar -->
     <link name="lidar3d_mount"/>
     <joint name="lidar3d_mount_joint" type="fixed">
       <parent link="chassis_link"/>
       <child link="lidar3d_mount"/>
-      <origin xyz="0.0 0.0 ${chassis_height}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.0 0.0 ${chassis_height + 0.1}" rpy="0.0 0.0 0.0"/>
     </joint>
 
     <!-- Sensors -->

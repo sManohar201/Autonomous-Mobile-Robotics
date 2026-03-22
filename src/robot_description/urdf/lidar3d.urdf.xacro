@@ -71,7 +71,10 @@
         </material>
       </visual>
       <sensor name="${prefix}_3d_lidar" type="gpu_lidar">
-        <topic>/${prefix}_lidar_3d/points</topic>
+        <!-- Gazebo Harmonic publishes LaserScan on this topic,
+             and PointCloudPacked on ${topic}/points automatically.
+             Bridge entry in gazebo.launch.py subscribes to /${prefix}_lidar_3d/points. -->
+        <topic>/${prefix}_lidar_3d</topic>
         <gz_frame_id>${prefix}_lidar_3d_link</gz_frame_id>
         <update_rate>${update_rate}</update_rate>
         <visualize>false</visualize>

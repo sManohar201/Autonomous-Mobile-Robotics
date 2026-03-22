@@ -1,0 +1,375 @@
+<?xml version="1.0" ?>
+<!--
+  slam_district.sdf — Large-scale persistent-mapping / loop-closure test world.
+
+  Design goals
+  ────────────
+  1. ~260 × 260 m navigable area: full perimeter loop ≈ 13 min at 1 m/s.
+  2. Five visually distinct zones → low inter-zone perceptual aliasing.
+  3. Zone 4 (Residential Grid) deliberately repeats identical geometry to
+     stress-test false-positive loop-closure rejection.
+  4. A 25 m landmark tower (cross-shaped footprint) is visible from every zone
+     and provides an asymmetric global bearing anchor.
+  5. Explicit gateway arches mark zone transitions for unambiguous LC triggers.
+  6. No dynamic obstacles — clean static world for SLAM benchmarking.
+
+  Zone layout (robot spawns at origin)
+  ─────────────────────────────────────
+                 Zone 1  Pillar Forest
+                 y ∈ [45, 125]
+                      │ N-arch (y=28)
+      Zone 5           │            Zone 2
+      Sculptural Park──HUB──────────Industrial Block
+      x ∈ [-130,-30]  │             x ∈ [30, 125]
+                      │ S-arch (y=-28)
+                 Zone 4  Residential Grid  ← aliasing zone
+                 y ∈ [-55, -135]
+
+  SLAM challenges addressed
+  ─────────────────────────
+  ┌─────────────────────┬──────────────────┬──────────────────────────────┐
+  │ Challenge           │ Where            │ Mitigation                   │
+  ├─────────────────────┼──────────────────┼──────────────────────────────┤
+  │ Corridor ambiguity  │ Zone 2 centre    │ Single cylinder at midpoint  │
+  │ Perceptual aliasing │ Zone 4 houses    │ Sphere entry markers + wall  │
+  │ Sparse features     │ Zone 5 park      │ Three unique sculptures       │
+  │ Global drift        │ Full perimeter   │ 25 m cross-tower, visible ∞  │
+  │ Rotational symmetry │ Hub plaza ring   │ 8 unequal-spacing pillars    │
+  └─────────────────────┴──────────────────┴──────────────────────────────┘
+
+  Loop closure waypoints
+  ──────────────────────
+  LC-A  (0,  0)    Hub centre — every route passes here.
+  LC-B  (0,  28)   North gateway arch + pillar forest visible.
+  LC-C  (85,  0)   Warehouse corridor midpoint cylinder.
+  LC-D  (0, -58)   Zone 4 entry sphere pair.
+  LC-E  (-28, 0)   West gateway + monolith bearing.
+-->
+<sdf version="1.8">
+  <world name="slam_district">
+
+    <!-- Earth reference frame for GPS / Magnetometer sensors -->
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <latitude_deg>51.5074</latitude_deg>
+      <longitude_deg>-0.1278</longitude_deg>
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+
+    <!-- System plugins -->
+    <plugin filename="gz-sim-physics-system"
+            name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system"
+            name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system"
+            name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system"
+            name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system"
+            name="gz::sim::systems::Imu"/>
+    <plugin filename="gz-sim-navsat-system"
+            name="gz::sim::systems::NavSat"/>
+    <plugin filename="gz-sim-magnetometer-system"
+            name="gz::sim::systems::Magnetometer"/>
+
+    <!-- Lighting -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.85 0.85 0.85 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range><constant>0.9</constant>
+        <linear>0.01</linear><quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Ground plane 600×600 m -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>600 600</size></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>600 600</size></plane></geometry>
+          <material>
+            <ambient>0.65 0.65 0.60 1</ambient>
+            <diffuse>0.65 0.65 0.60 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================================================================
+         CENTRAL HUB   x ∈ [-30, 30]   y ∈ [-30, 30]
+         Robot spawns at (0,0).  All hub structures are ≥7 m from origin.
+         ================================================================ -->
+
+    <!-- Landmark tower at (0, 40) — 25 m tall, RED, visible from all zones.
+         Cross-shaped fins (0–4 m) give asymmetric 2D-scan signature that
+         cannot be confused with any other structure. -->
+    <model name="landmark_tower">
+      <static>true</static>
+      <pose>0 40 0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>2.5</radius><length>25</length></cylinder></geometry><pose>0 0 12.5 0 0 0</pose></collision>
+        <visual   name="vis"><geometry><cylinder><radius>2.5</radius><length>25</length></cylinder></geometry><pose>0 0 12.5 0 0 0</pose>
+          <material><ambient>0.85 0.12 0.05 1</ambient><diffuse>0.85 0.12 0.05 1</diffuse></material></visual>
+      </link>
+    </model>
+    <!-- N fin: extends y = 42.5 → 47.5 -->
+    <model name="tower_fin_n"><static>true</static><pose>0 45 0 0 0 0</pose><link name="link">
+      <collision name="col"><geometry><box><size>0.5 5 4</size></box></geometry><pose>0 0 2 0 0 0</pose></collision>
+      <visual   name="vis"><geometry><box><size>0.5 5 4</size></box></geometry><pose>0 0 2 0 0 0</pose><material><ambient>0.75 0.1 0.05 1</ambient><diffuse>0.75 0.1 0.05 1</diffuse></material></visual>
+    </link></model>
+    <!-- S fin: extends y = 32.5 → 37.5 -->
+    <model name="tower_fin_s"><static>true</static><pose>0 35 0 0 0 0</pose><link name="link">
+      <collision name="col"><geometry><box><size>0.5 5 4</size></box></geometry><pose>0 0 2 0 0 0</pose></collision>
+      <visual   name="vis"><geometry><box><size>0.5 5 4</size></box></geometry><pose>0 0 2 0 0 0</pose><material><ambient>0.75 0.1 0.05 1</ambient><diffuse>0.75 0.1 0.05 1</diffuse></material></visual>
+    </link></model>
+    <!-- E fin: extends x = 2.5 → 7.5 -->
+    <model name="tower_fin_e"><static>true</static><pose>5 40 0 0 0 0</pose><link name="link">
+      <collision name="col"><geometry><box><size>5 0.5 4</size></box></geometry><pose>0 0 2 0 0 0</pose></collision>
+      <visual   name="vis"><geometry><box><size>5 0.5 4</size></box></geometry><pose>0 0 2 0 0 0</pose><material><ambient>0.75 0.1 0.05 1</ambient><diffuse>0.75 0.1 0.05 1</diffuse></material></visual>
+    </link></model>
+    <!-- W fin: extends x = -7.5 → -2.5 -->
+    <model name="tower_fin_w"><static>true</static><pose>-5 40 0 0 0 0</pose><link name="link">
+      <collision name="col"><geometry><box><size>5 0.5 4</size></box></geometry><pose>0 0 2 0 0 0</pose></collision>
+      <visual   name="vis"><geometry><box><size>5 0.5 4</size></box></geometry><pose>0 0 2 0 0 0</pose><material><ambient>0.75 0.1 0.05 1</ambient><diffuse>0.75 0.1 0.05 1</diffuse></material></visual>
+    </link></model>
+
+    <!-- Plaza pillar ring — 8 yellow pillars at r=8 m around (0,15).
+         Gives a distinctive octagonal scan pattern. -->
+    <model name="pp0"><static>true</static><pose> 8  15 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.9 0.75 0.1 1</ambient><diffuse>0.9 0.75 0.1 1</diffuse></material></visual></link></model>
+    <model name="pp1"><static>true</static><pose> 6  21 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.9 0.75 0.1 1</ambient><diffuse>0.9 0.75 0.1 1</diffuse></material></visual></link></model>
+    <model name="pp2"><static>true</static><pose> 0  23 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.9 0.75 0.1 1</ambient><diffuse>0.9 0.75 0.1 1</diffuse></material></visual></link></model>
+    <model name="pp3"><static>true</static><pose>-6  21 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.9 0.75 0.1 1</ambient><diffuse>0.9 0.75 0.1 1</diffuse></material></visual></link></model>
+    <model name="pp4"><static>true</static><pose>-8  15 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.9 0.75 0.1 1</ambient><diffuse>0.9 0.75 0.1 1</diffuse></material></visual></link></model>
+    <model name="pp5"><static>true</static><pose>-6   9 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.9 0.75 0.1 1</ambient><diffuse>0.9 0.75 0.1 1</diffuse></material></visual></link></model>
+    <model name="pp6"><static>true</static><pose> 0   7 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.9 0.75 0.1 1</ambient><diffuse>0.9 0.75 0.1 1</diffuse></material></visual></link></model>
+    <model name="pp7"><static>true</static><pose> 6   9 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.6 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.9 0.75 0.1 1</ambient><diffuse>0.9 0.75 0.1 1</diffuse></material></visual></link></model>
+
+    <!-- Zone gateway arches — pair of 4.5 m posts flanking each corridor.
+         Each arch colour is unique so the robot knows which zone it is entering. -->
+    <!-- North arch (→ Zone 1, olive) -->
+    <model name="arch_n_l"><static>true</static><pose>-4 28 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose><material><ambient>0.65 0.65 0.2 1</ambient><diffuse>0.65 0.65 0.2 1</diffuse></material></visual></link></model>
+    <model name="arch_n_r"><static>true</static><pose> 4 28 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose><material><ambient>0.65 0.65 0.2 1</ambient><diffuse>0.65 0.65 0.2 1</diffuse></material></visual></link></model>
+    <!-- South arch (→ Zone 4, blue) -->
+    <model name="arch_s_l"><static>true</static><pose>-4 -28 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose><material><ambient>0.2 0.4 0.85 1</ambient><diffuse>0.2 0.4 0.85 1</diffuse></material></visual></link></model>
+    <model name="arch_s_r"><static>true</static><pose> 4 -28 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose><material><ambient>0.2 0.4 0.85 1</ambient><diffuse>0.2 0.4 0.85 1</diffuse></material></visual></link></model>
+    <!-- East arch (→ Zone 2, green) -->
+    <model name="arch_e_l"><static>true</static><pose>28  4 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose><material><ambient>0.15 0.7 0.25 1</ambient><diffuse>0.15 0.7 0.25 1</diffuse></material></visual></link></model>
+    <model name="arch_e_r"><static>true</static><pose>28 -4 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose><material><ambient>0.15 0.7 0.25 1</ambient><diffuse>0.15 0.7 0.25 1</diffuse></material></visual></link></model>
+    <!-- West arch (→ Zone 5, orange) -->
+    <model name="arch_w_l"><static>true</static><pose>-28  4 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose><material><ambient>0.85 0.38 0.08 1</ambient><diffuse>0.85 0.38 0.08 1</diffuse></material></visual></link></model>
+    <model name="arch_w_r"><static>true</static><pose>-28 -4 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.5 0.5 4.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose><material><ambient>0.85 0.38 0.08 1</ambient><diffuse>0.85 0.38 0.08 1</diffuse></material></visual></link></model>
+
+    <!-- ================================================================
+         ZONE 1 — PILLAR FOREST   x ∈ [-25, 25]   y ∈ [45, 125]
+         20 cylinders in 4-col × 5-row grid with cycling heights 6/4/2 m.
+         Height pattern: (col+row) mod 3 → 0=6m, 1=4m, 2=2m.
+         Dense features → fast scan-match convergence on re-entry (LC-B).
+         ================================================================ -->
+    <!-- col x: -18  -6  +6  +18  |  row y: 65  77  89  101  113 -->
+    <model name="fp00"><static>true</static><pose>-18  65 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>6</length></cylinder></geometry><pose>0 0 3 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>6</length></cylinder></geometry><pose>0 0 3 0 0 0</pose><material><ambient>0.25 0.50 0.15 1</ambient><diffuse>0.25 0.50 0.15 1</diffuse></material></visual></link></model>
+    <model name="fp01"><static>true</static><pose>-18  77 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>4</length></cylinder></geometry><pose>0 0 2 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>4</length></cylinder></geometry><pose>0 0 2 0 0 0</pose><material><ambient>0.30 0.55 0.20 1</ambient><diffuse>0.30 0.55 0.20 1</diffuse></material></visual></link></model>
+    <model name="fp02"><static>true</static><pose>-18  89 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>2</length></cylinder></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>2</length></cylinder></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.35 0.60 0.25 1</ambient><diffuse>0.35 0.60 0.25 1</diffuse></material></visual></link></model>
+    <model name="fp03"><static>true</static><pose>-18 101 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>6</length></cylinder></geometry><pose>0 0 3 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>6</length></cylinder></geometry><pose>0 0 3 0 0 0</pose><material><ambient>0.25 0.50 0.15 1</ambient><diffuse>0.25 0.50 0.15 1</diffuse></material></visual></link></model>
+    <model name="fp04"><static>true</static><pose>-18 113 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>4</length></cylinder></geometry><pose>0 0 2 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>4</length></cylinder></geometry><pose>0 0 2 0 0 0</pose><material><ambient>0.30 0.55 0.20 1</ambient><diffuse>0.30 0.55 0.20 1</diffuse></material></visual></link></model>
+    <model name="fp10"><static>true</static><pose> -6  65 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>4</length></cylinder></geometry><pose>0 0 2 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>4</length></cylinder></geometry><pose>0 0 2 0 0 0</pose><material><ambient>0.30 0.55 0.20 1</ambient><diffuse>0.30 0.55 0.20 1</diffuse></material></visual></link></model>
+    <model name="fp11"><static>true</static><pose> -6  77 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>2</length></cylinder></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>2</length></cylinder></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.35 0.60 0.25 1</ambient><diffuse>0.35 0.60 0.25 1</diffuse></material></visual></link></model>
+    <model name="fp12"><static>true</static><pose> -6  89 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>6</length></cylinder></geometry><pose>0 0 3 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>6</length></cylinder></geometry><pose>0 0 3 0 0 0</pose><material><ambient>0.25 0.50 0.15 1</ambient><diffuse>0.25 0.50 0.15 1</diffuse></material></visual></link></model>
+    <model name="fp13"><static>true</static><pose> -6 101 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>4</length></cylinder></geometry><pose>0 0 2 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>4</length></cylinder></geometry><pose>0 0 2 0 0 0</pose><material><ambient>0.30 0.55 0.20 1</ambient><diffuse>0.30 0.55 0.20 1</diffuse></material></visual></link></model>
+    <model name="fp14"><static>true</static><pose> -6 113 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>2</length></cylinder></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>2</length></cylinder></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.35 0.60 0.25 1</ambient><diffuse>0.35 0.60 0.25 1</diffuse></material></visual></link></model>
+    <model name="fp20"><static>true</static><pose>  6  65 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>2</length></cylinder></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>2</length></cylinder></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.35 0.60 0.25 1</ambient><diffuse>0.35 0.60 0.25 1</diffuse></material></visual></link></model>
+    <model name="fp21"><static>true</static><pose>  6  77 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>6</length></cylinder></geometry><pose>0 0 3 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>6</length></cylinder></geometry><pose>0 0 3 0 0 0</pose><material><ambient>0.25 0.50 0.15 1</ambient><diffuse>0.25 0.50 0.15 1</diffuse></material></visual></link></model>
+    <model name="fp22"><static>true</static><pose>  6  89 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>4</length></cylinder></geometry><pose>0 0 2 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>4</length></cylinder></geometry><pose>0 0 2 0 0 0</pose><material><ambient>0.30 0.55 0.20 1</ambient><diffuse>0.30 0.55 0.20 1</diffuse></material></visual></link></model>
+    <model name="fp23"><static>true</static><pose>  6 101 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>2</length></cylinder></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>2</length></cylinder></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.35 0.60 0.25 1</ambient><diffuse>0.35 0.60 0.25 1</diffuse></material></visual></link></model>
+    <model name="fp24"><static>true</static><pose>  6 113 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>6</length></cylinder></geometry><pose>0 0 3 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>6</length></cylinder></geometry><pose>0 0 3 0 0 0</pose><material><ambient>0.25 0.50 0.15 1</ambient><diffuse>0.25 0.50 0.15 1</diffuse></material></visual></link></model>
+    <model name="fp30"><static>true</static><pose> 18  65 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>6</length></cylinder></geometry><pose>0 0 3 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>6</length></cylinder></geometry><pose>0 0 3 0 0 0</pose><material><ambient>0.25 0.50 0.15 1</ambient><diffuse>0.25 0.50 0.15 1</diffuse></material></visual></link></model>
+    <model name="fp31"><static>true</static><pose> 18  77 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>4</length></cylinder></geometry><pose>0 0 2 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>4</length></cylinder></geometry><pose>0 0 2 0 0 0</pose><material><ambient>0.30 0.55 0.20 1</ambient><diffuse>0.30 0.55 0.20 1</diffuse></material></visual></link></model>
+    <model name="fp32"><static>true</static><pose> 18  89 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>2</length></cylinder></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>2</length></cylinder></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.35 0.60 0.25 1</ambient><diffuse>0.35 0.60 0.25 1</diffuse></material></visual></link></model>
+    <model name="fp33"><static>true</static><pose> 18 101 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>6</length></cylinder></geometry><pose>0 0 3 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>6</length></cylinder></geometry><pose>0 0 3 0 0 0</pose><material><ambient>0.25 0.50 0.15 1</ambient><diffuse>0.25 0.50 0.15 1</diffuse></material></visual></link></model>
+    <model name="fp34"><static>true</static><pose> 18 113 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.5</radius><length>4</length></cylinder></geometry><pose>0 0 2 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.5</radius><length>4</length></cylinder></geometry><pose>0 0 2 0 0 0</pose><material><ambient>0.30 0.55 0.20 1</ambient><diffuse>0.30 0.55 0.20 1</diffuse></material></visual></link></model>
+
+    <!-- ================================================================
+         ZONE 2 — INDUSTRIAL BLOCK   x ∈ [30, 125]   y ∈ [-20, 20]
+         Two parallel warehouses create a 6 m-wide centre corridor.
+         Stress-tests scan matching in a nearly featureless straight run.
+         LC-C: orange cylinder at midpoint breaks the corridor symmetry.
+         Dead-end closing wall forces turn-around → genuine loop closure.
+         ================================================================ -->
+
+    <!-- Warehouse A (north, south face at y=3, north face at y=9) -->
+    <model name="warehouse_a">
+      <static>true</static>
+      <pose>85 6 0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>48 6 5</size></box></geometry><pose>0 0 2.5 0 0 0</pose></collision>
+        <visual   name="vis"><geometry><box><size>48 6 5</size></box></geometry><pose>0 0 2.5 0 0 0</pose>
+          <material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse></material></visual>
+      </link>
+    </model>
+    <!-- Warehouse B (south, north face at y=-3, south face at y=-9) -->
+    <model name="warehouse_b">
+      <static>true</static>
+      <pose>85 -6 0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>48 6 5</size></box></geometry><pose>0 0 2.5 0 0 0</pose></collision>
+        <visual   name="vis"><geometry><box><size>48 6 5</size></box></geometry><pose>0 0 2.5 0 0 0</pose>
+          <material><ambient>0.40 0.40 0.40 1</ambient><diffuse>0.40 0.40 0.40 1</diffuse></material></visual>
+      </link>
+    </model>
+    <!-- Closing wall — dead-end at east end; spans y=[-11, 11] -->
+    <model name="warehouse_c">
+      <static>true</static>
+      <pose>112 0 0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>8 22 5</size></box></geometry><pose>0 0 2.5 0 0 0</pose></collision>
+        <visual   name="vis"><geometry><box><size>8 22 5</size></box></geometry><pose>0 0 2.5 0 0 0</pose>
+          <material><ambient>0.30 0.30 0.30 1</ambient><diffuse>0.30 0.30 0.30 1</diffuse></material></visual>
+      </link>
+    </model>
+    <!-- LC-C: orange midpoint cylinder (the only round object in the corridor) -->
+    <model name="corridor_marker">
+      <static>true</static>
+      <pose>85 0 0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.8</radius><length>3</length></cylinder></geometry><pose>0 0 1.5 0 0 0</pose></collision>
+        <visual   name="vis"><geometry><cylinder><radius>0.8</radius><length>3</length></cylinder></geometry><pose>0 0 1.5 0 0 0</pose>
+          <material><ambient>0.85 0.50 0.08 1</ambient><diffuse>0.85 0.50 0.08 1</diffuse></material></visual>
+      </link>
+    </model>
+    <!-- Loading dock bumps — break flat-wall scan ambiguity on outer faces -->
+    <model name="dock_a1"><static>true</static><pose> 70 11 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>4 2 2</size></box></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><box><size>4 2 2</size></box></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.38 0.38 0.38 1</ambient><diffuse>0.38 0.38 0.38 1</diffuse></material></visual></link></model>
+    <model name="dock_a2"><static>true</static><pose>100 11 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>4 2 2</size></box></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><box><size>4 2 2</size></box></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.38 0.38 0.38 1</ambient><diffuse>0.38 0.38 0.38 1</diffuse></material></visual></link></model>
+    <model name="dock_b1"><static>true</static><pose> 70 -11 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>4 2 2</size></box></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><box><size>4 2 2</size></box></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.38 0.38 0.38 1</ambient><diffuse>0.38 0.38 0.38 1</diffuse></material></visual></link></model>
+    <model name="dock_b2"><static>true</static><pose>100 -11 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>4 2 2</size></box></geometry><pose>0 0 1 0 0 0</pose></collision><visual name="vis"><geometry><box><size>4 2 2</size></box></geometry><pose>0 0 1 0 0 0</pose><material><ambient>0.38 0.38 0.38 1</ambient><diffuse>0.38 0.38 0.38 1</diffuse></material></visual></link></model>
+
+    <!-- ================================================================
+         ZONE 4 — RESIDENTIAL GRID (ALIASING ZONE)
+         x ∈ [-35, 35]   y ∈ [-55, -135]
+         9 geometrically identical 10×8×3 m houses in a 3×3 grid.
+         Street widths: ~10 m E-W, ~12 m N-S.
+         SLAM must reject false loop closures between identical houses.
+         Disambiguation cues: sphere pair at entry (LC-D), south perimeter
+         wall with buttresses, and a parapet on the NW-corner house only.
+         ================================================================ -->
+
+    <!-- LC-D: blue sphere pair — unique zone-entry markers -->
+    <model name="z4_sphere_l">
+      <static>true</static>
+      <pose>-4 -58 0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><sphere><radius>1.2</radius></sphere></geometry><pose>0 0 1.2 0 0 0</pose></collision>
+        <visual   name="vis"><geometry><sphere><radius>1.2</radius></sphere></geometry><pose>0 0 1.2 0 0 0</pose>
+          <material><ambient>0.1 0.3 0.9 1</ambient><diffuse>0.1 0.3 0.9 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="z4_sphere_r">
+      <static>true</static>
+      <pose>4 -58 0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><sphere><radius>1.2</radius></sphere></geometry><pose>0 0 1.2 0 0 0</pose></collision>
+        <visual   name="vis"><geometry><sphere><radius>1.2</radius></sphere></geometry><pose>0 0 1.2 0 0 0</pose>
+          <material><ambient>0.1 0.3 0.9 1</ambient><diffuse>0.1 0.3 0.9 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!-- 9 identical houses.  col x = {-20, 0, 20},  row y = {-75, -97, -119} -->
+    <model name="house_c0r0"><static>true</static><pose>-20  -75 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose></collision><visual name="vis"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose><material><ambient>0.85 0.78 0.65 1</ambient><diffuse>0.85 0.78 0.65 1</diffuse></material></visual></link></model>
+    <model name="house_c1r0"><static>true</static><pose>  0  -75 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose></collision><visual name="vis"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose><material><ambient>0.85 0.78 0.65 1</ambient><diffuse>0.85 0.78 0.65 1</diffuse></material></visual></link></model>
+    <model name="house_c2r0"><static>true</static><pose> 20  -75 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose></collision><visual name="vis"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose><material><ambient>0.85 0.78 0.65 1</ambient><diffuse>0.85 0.78 0.65 1</diffuse></material></visual></link></model>
+    <model name="house_c0r1"><static>true</static><pose>-20  -97 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose></collision><visual name="vis"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose><material><ambient>0.85 0.78 0.65 1</ambient><diffuse>0.85 0.78 0.65 1</diffuse></material></visual></link></model>
+    <model name="house_c1r1"><static>true</static><pose>  0  -97 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose></collision><visual name="vis"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose><material><ambient>0.85 0.78 0.65 1</ambient><diffuse>0.85 0.78 0.65 1</diffuse></material></visual></link></model>
+    <model name="house_c2r1"><static>true</static><pose> 20  -97 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose></collision><visual name="vis"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose><material><ambient>0.85 0.78 0.65 1</ambient><diffuse>0.85 0.78 0.65 1</diffuse></material></visual></link></model>
+    <model name="house_c0r2"><static>true</static><pose>-20 -119 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose></collision><visual name="vis"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose><material><ambient>0.85 0.78 0.65 1</ambient><diffuse>0.85 0.78 0.65 1</diffuse></material></visual></link></model>
+    <model name="house_c1r2"><static>true</static><pose>  0 -119 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose></collision><visual name="vis"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose><material><ambient>0.85 0.78 0.65 1</ambient><diffuse>0.85 0.78 0.65 1</diffuse></material></visual></link></model>
+    <model name="house_c2r2"><static>true</static><pose> 20 -119 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose></collision><visual name="vis"><geometry><box><size>10 8 3</size></box></geometry><pose>0 0 1.5 0 0 0</pose><material><ambient>0.85 0.78 0.65 1</ambient><diffuse>0.85 0.78 0.65 1</diffuse></material></visual></link></model>
+
+    <!-- Deviant house (c0r0): extra south-face parapet visible at close range -->
+    <model name="house_c0r0_parapet">
+      <static>true</static>
+      <pose>-20 -79.2 0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>10 0.4 1.5</size></box></geometry><pose>0 0 3.75 0 0 0</pose></collision>
+        <visual   name="vis"><geometry><box><size>10 0.4 1.5</size></box></geometry><pose>0 0 3.75 0 0 0</pose>
+          <material><ambient>0.75 0.68 0.55 1</ambient><diffuse>0.75 0.68 0.55 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!-- South perimeter wall with buttresses — unique zone boundary -->
+    <model name="z4_south_wall">
+      <static>true</static>
+      <pose>0 -132 0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>70 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose></collision>
+        <visual   name="vis"><geometry><box><size>70 0.6 2</size></box></geometry><pose>0 0 1 0 0 0</pose>
+          <material><ambient>0.55 0.55 0.50 1</ambient><diffuse>0.55 0.55 0.50 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="z4_but1"><static>true</static><pose>-25 -133 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>3 2 3.5</size></box></geometry><pose>0 0 1.75 0 0 0</pose></collision><visual name="vis"><geometry><box><size>3 2 3.5</size></box></geometry><pose>0 0 1.75 0 0 0</pose><material><ambient>0.5 0.5 0.45 1</ambient><diffuse>0.5 0.5 0.45 1</diffuse></material></visual></link></model>
+    <model name="z4_but2"><static>true</static><pose>  0 -133 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>3 2 3.5</size></box></geometry><pose>0 0 1.75 0 0 0</pose></collision><visual name="vis"><geometry><box><size>3 2 3.5</size></box></geometry><pose>0 0 1.75 0 0 0</pose><material><ambient>0.5 0.5 0.45 1</ambient><diffuse>0.5 0.5 0.45 1</diffuse></material></visual></link></model>
+    <model name="z4_but3"><static>true</static><pose> 25 -133 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>3 2 3.5</size></box></geometry><pose>0 0 1.75 0 0 0</pose></collision><visual name="vis"><geometry><box><size>3 2 3.5</size></box></geometry><pose>0 0 1.75 0 0 0</pose><material><ambient>0.5 0.5 0.45 1</ambient><diffuse>0.5 0.5 0.45 1</diffuse></material></visual></link></model>
+
+    <!-- ================================================================
+         ZONE 5 — SCULPTURAL PARK   x ∈ [-130, -30]   y ∈ [-30, 30]
+         Three geometrically unique sculptures + perimeter tree ring.
+         Sparse features test scan matcher under low-return conditions.
+         ================================================================ -->
+
+    <!-- Sculpture A: Monolith — 1×1×8 m.  Tallest thin structure anywhere. -->
+    <model name="monolith">
+      <static>true</static>
+      <pose>-90 10 0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1 1 8</size></box></geometry><pose>0 0 4 0 0 0</pose></collision>
+        <visual   name="vis"><geometry><box><size>1 1 8</size></box></geometry><pose>0 0 4 0 0 0</pose>
+          <material><ambient>0.55 0.55 0.62 1</ambient><diffuse>0.55 0.55 0.62 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!-- Sculpture B: Arch — two posts + crossbar spanning 6 m in Y. -->
+    <model name="arch_post_l"><static>true</static><pose>-115 23 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.6 0.6 5</size></box></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.6 0.6 5</size></box></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.50 0.50 0.58 1</ambient><diffuse>0.50 0.50 0.58 1</diffuse></material></visual></link></model>
+    <model name="arch_post_r"><static>true</static><pose>-115 17 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.6 0.6 5</size></box></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.6 0.6 5</size></box></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.50 0.50 0.58 1</ambient><diffuse>0.50 0.50 0.58 1</diffuse></material></visual></link></model>
+    <model name="arch_bar"><static>true</static><pose>-115 20 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>0.6 7 0.6</size></box></geometry><pose>0 0 5.1 0 0 0</pose></collision><visual name="vis"><geometry><box><size>0.6 7 0.6</size></box></geometry><pose>0 0 5.1 0 0 0</pose><material><ambient>0.50 0.50 0.58 1</ambient><diffuse>0.50 0.50 0.58 1</diffuse></material></visual></link></model>
+
+    <!-- Sculpture C: Wedge stack — 3 offset slabs, unique staircase in 3D scan. -->
+    <model name="wedge_1"><static>true</static><pose>-105 -20 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>4 1 0.5</size></box></geometry><pose>0 0 0.25 0 0 0</pose></collision><visual name="vis"><geometry><box><size>4 1 0.5</size></box></geometry><pose>0 0 0.25 0 0 0</pose><material><ambient>0.50 0.50 0.58 1</ambient><diffuse>0.50 0.50 0.58 1</diffuse></material></visual></link></model>
+    <model name="wedge_2"><static>true</static><pose>-104 -20 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>4 1 0.5</size></box></geometry><pose>0 0 1.25 0 0 0</pose></collision><visual name="vis"><geometry><box><size>4 1 0.5</size></box></geometry><pose>0 0 1.25 0 0 0</pose><material><ambient>0.50 0.50 0.58 1</ambient><diffuse>0.50 0.50 0.58 1</diffuse></material></visual></link></model>
+    <model name="wedge_3"><static>true</static><pose>-103 -20 0 0 0 0</pose><link name="link"><collision name="col"><geometry><box><size>4 1 0.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose></collision><visual name="vis"><geometry><box><size>4 1 0.5</size></box></geometry><pose>0 0 2.25 0 0 0</pose><material><ambient>0.50 0.50 0.58 1</ambient><diffuse>0.50 0.50 0.58 1</diffuse></material></visual></link></model>
+
+    <!-- Long low wall — 30 m, triggers brief corridor problem at y=-26 -->
+    <model name="z5_low_wall">
+      <static>true</static>
+      <pose>-100 -26 0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>30 0.4 1.2</size></box></geometry><pose>0 0 0.6 0 0 0</pose></collision>
+        <visual   name="vis"><geometry><box><size>30 0.4 1.2</size></box></geometry><pose>0 0 0.6 0 0 0</pose>
+          <material><ambient>0.55 0.52 0.48 1</ambient><diffuse>0.55 0.52 0.48 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!-- Perimeter trees: 5 N (y=30), 5 S (y=-30), 3 W (x=-130) -->
+    <model name="tr_n1"><static>true</static><pose> -45  30 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
+    <model name="tr_n2"><static>true</static><pose> -65  30 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
+    <model name="tr_n3"><static>true</static><pose> -85  30 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
+    <model name="tr_n4"><static>true</static><pose>-105  30 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
+    <model name="tr_n5"><static>true</static><pose>-125  30 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
+    <model name="tr_s1"><static>true</static><pose> -45 -30 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
+    <model name="tr_s2"><static>true</static><pose> -65 -30 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
+    <model name="tr_s3"><static>true</static><pose> -85 -30 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
+    <model name="tr_s4"><static>true</static><pose>-105 -30 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
+    <model name="tr_s5"><static>true</static><pose>-125 -30 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
+    <model name="tr_w1"><static>true</static><pose>-130 -15 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
+    <model name="tr_w2"><static>true</static><pose>-130   0 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
+    <model name="tr_w3"><static>true</static><pose>-130  15 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
+
+  </world>
+</sdf>
