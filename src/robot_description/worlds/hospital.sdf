@@ -211,14 +211,14 @@
           <material><ambient>1.0 0.4 0.0 1</ambient><diffuse>1.0 0.4 0.0 1</diffuse></material></visual>
       </link>
       <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
-        <link_name>body</link_name><loop>true</loop><force>25</force><torque>10</torque>
+        <link_name>body</link_name><loop>true</loop><force>100</force><torque>30</torque>
         <waypoints><waypoint>3 0</waypoint><waypoint>21 0</waypoint></waypoints>
       </plugin>
     </model>
 
     <!-- Cart 2: patrols north room N2 -->
     <model name="cart_n2">
-      <pose>11 2.5 0.6 0 0 0</pose>
+      <pose>11 3.5 0.6 0 0 0</pose>
       <link name="body">
         <inertial><mass>20</mass><inertia><ixx>1</ixx><ixy>0</ixy><ixz>0</ixz><iyy>1</iyy><iyz>0</iyz><izz>1</izz></inertia></inertial>
         <collision name="col"><geometry><box><size>0.4 0.5 1.0</size></box></geometry><surface><friction><ode><mu>0.05</mu><mu2>0.05</mu2></ode></friction></surface></collision>
@@ -226,8 +226,8 @@
           <material><ambient>1.0 0.4 0.0 1</ambient><diffuse>1.0 0.4 0.0 1</diffuse></material></visual>
       </link>
       <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
-        <link_name>body</link_name><loop>true</loop><force>15</force><torque>8</torque>
-        <waypoints><waypoint>11 1.5</waypoint><waypoint>11 4.8</waypoint></waypoints>
+        <link_name>body</link_name><loop>true</loop><force>100</force><torque>30</torque>
+        <waypoints><waypoint>11 2.8</waypoint><waypoint>11 4.5</waypoint></waypoints>
       </plugin>
     </model>
 
@@ -241,7 +241,7 @@
           <material><ambient>1.0 0.4 0.0 1</ambient><diffuse>1.0 0.4 0.0 1</diffuse></material></visual>
       </link>
       <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
-        <link_name>body</link_name><loop>true</loop><force>15</force><torque>8</torque>
+        <link_name>body</link_name><loop>true</loop><force>100</force><torque>30</torque>
         <waypoints><waypoint>3 -2.5</waypoint><waypoint>7 -2.5</waypoint></waypoints>
       </plugin>
     </model>
@@ -256,7 +256,7 @@
           <material><ambient>1.0 0.6 0.0 1</ambient><diffuse>1.0 0.6 0.0 1</diffuse></material></visual>
       </link>
       <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
-        <link_name>body</link_name><loop>true</loop><force>15</force><torque>8</torque>
+        <link_name>body</link_name><loop>true</loop><force>100</force><torque>30</torque>
         <waypoints><waypoint>14 0</waypoint><waypoint>22 0</waypoint></waypoints>
       </plugin>
     </model>

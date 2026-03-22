@@ -133,7 +133,7 @@
          ════════════════════════════════════════════════════════════════════ -->
 
     <model name="pedestrian_1">
-      <pose>-5 0 0.9 0 0 0</pose>
+      <pose>-5 4 0.9 0 0 0</pose>
       <link name="body">
         <inertial><mass>70</mass><inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>2</izz></inertia></inertial>
         <collision name="col"><geometry><cylinder><radius>0.25</radius><length>1.8</length></cylinder></geometry><surface><friction><ode><mu>0.05</mu><mu2>0.05</mu2></ode></friction></surface></collision>
@@ -142,7 +142,7 @@
       </link>
       <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
         <link_name>body</link_name><loop>true</loop><force>150</force><torque>30</torque>
-        <waypoints><waypoint>5 0</waypoint><waypoint>5 12</waypoint><waypoint>-5 12</waypoint><waypoint>-5 0</waypoint></waypoints>
+        <waypoints><waypoint>5 4</waypoint><waypoint>5 12</waypoint><waypoint>-5 12</waypoint><waypoint>-5 4</waypoint></waypoints>
       </plugin>
     </model>
 
