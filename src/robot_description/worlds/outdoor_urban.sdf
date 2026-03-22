@@ -1,0 +1,220 @@
+<?xml version="1.0" ?>
+<!--
+  Outdoor Urban World — Gazebo Harmonic
+  Designed to challenge SLAM and navigation:
+  - Mix of open areas and tight alleyways between buildings
+  - Trees (cylinders) are poor lidar landmarks due to round cross-section
+  - Irregular building layout creates asymmetric environment
+  - Long open stretches with few landmarks (feature-sparse areas)
+  - 6 dynamic pedestrian obstacles navigating the paths
+
+  Robot spawns at (0, 0, 0.1) — in the central plaza.
+  The environment extends 25 m in each direction.
+-->
+<sdf version="1.8">
+  <world name="outdoor_urban">
+
+    <plugin filename="gz-sim-physics-system"           name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system"     name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system"           name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system"               name="gz::sim::systems::Imu"/>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows><pose>0 0 30 0 0 0</pose>
+      <diffuse>1 0.95 0.85 1</diffuse><specular>0.4 0.4 0.35 1</specular>
+      <attenuation><range>1000</range><constant>0.9</constant><linear>0.01</linear><quadratic>0.001</quadratic></attenuation>
+      <direction>-0.4 0.2 -0.8</direction>
+    </light>
+
+    <model name="ground_plane"><static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><plane><normal>0 0 1</normal><size>200 200</size></plane></geometry></collision>
+        <visual name="vis">
+          <geometry><plane><normal>0 0 1</normal><size>200 200</size></plane></geometry>
+          <material><ambient>0.55 0.58 0.5 1</ambient><diffuse>0.55 0.58 0.5 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ── BUILDINGS ──────────────────────────────────────────────────────
+         4 main buildings + 2 smaller structures, arranged to create
+         alleyways and a central plaza.                                   -->
+
+    <!-- Building A: NW, large office block (14 m × 10 m × 6 m) -->
+    <model name="building_A"><static>true</static><pose>-17 14 3 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>14 10 6</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>14 10 6</size></box></geometry><material><ambient>0.65 0.62 0.58 1</ambient><diffuse>0.65 0.62 0.58 1</diffuse></material></visual></link></model>
+
+    <!-- Building B: NE, apartment block (10 m × 14 m × 8 m) -->
+    <model name="building_B"><static>true</static><pose>16 15 4 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>10 14 8</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>10 14 8</size></box></geometry><material><ambient>0.7 0.65 0.55 1</ambient><diffuse>0.7 0.65 0.55 1</diffuse></material></visual></link></model>
+
+    <!-- Building C: SE, warehouse/mall (16 m × 12 m × 5 m) -->
+    <model name="building_C"><static>true</static><pose>17 -15 2.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>16 12 5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>16 12 5</size></box></geometry><material><ambient>0.6 0.6 0.65 1</ambient><diffuse>0.6 0.6 0.65 1</diffuse></material></visual></link></model>
+
+    <!-- Building D: SW, narrow strip of shops (6 m × 18 m × 4 m) -->
+    <model name="building_D"><static>true</static><pose>-18 -14 2 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>6 18 4</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>6 18 4</size></box></geometry><material><ambient>0.72 0.68 0.6 1</ambient><diffuse>0.72 0.68 0.6 1</diffuse></material></visual></link></model>
+
+    <!-- Small structure E: kiosk/booth in NE plaza -->
+    <model name="kiosk_E"><static>true</static><pose>7 6 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>3 3 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>3 3 3</size></box></geometry><material><ambient>0.8 0.75 0.6 1</ambient><diffuse>0.8 0.75 0.6 1</diffuse></material></visual></link></model>
+
+    <!-- Small structure F: bus shelter -->
+    <model name="shelter_F"><static>true</static><pose>-8 -6 1 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>4 1.5 2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>4 1.5 2</size></box></geometry><material><ambient>0.5 0.6 0.7 1</ambient><diffuse>0.5 0.6 0.7 1</diffuse></material></visual></link></model>
+
+    <!-- ── TREES (cylinder trunks, 0.25 m radius, 3 m tall) ────────────── -->
+    <model name="tree_1"><static>true</static><pose>-4 8 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.25</radius><length>3</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.25</radius><length>3</length></geometry><material><ambient>0.3 0.2 0.1 1</ambient><diffuse>0.3 0.2 0.1 1</diffuse></material></visual></link></model>
+    <model name="tree_2"><static>true</static><pose>4 10 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.25</radius><length>3</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.25</radius><length>3</length></geometry><material><ambient>0.3 0.2 0.1 1</ambient><diffuse>0.3 0.2 0.1 1</diffuse></material></visual></link></model>
+    <model name="tree_3"><static>true</static><pose>-10 4 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.3</radius><length>3</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.3</radius><length>3</length></geometry><material><ambient>0.3 0.2 0.1 1</ambient><diffuse>0.3 0.2 0.1 1</diffuse></material></visual></link></model>
+    <model name="tree_4"><static>true</static><pose>10 -4 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.25</radius><length>3</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.25</radius><length>3</length></geometry><material><ambient>0.3 0.2 0.1 1</ambient><diffuse>0.3 0.2 0.1 1</diffuse></material></visual></link></model>
+    <model name="tree_5"><static>true</static><pose>-5 -9 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.25</radius><length>3</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.25</radius><length>3</length></geometry><material><ambient>0.3 0.2 0.1 1</ambient><diffuse>0.3 0.2 0.1 1</diffuse></material></visual></link></model>
+    <model name="tree_6"><static>true</static><pose>6 -10 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.28</radius><length>3</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.28</radius><length>3</length></geometry><material><ambient>0.3 0.2 0.1 1</ambient><diffuse>0.3 0.2 0.1 1</diffuse></material></visual></link></model>
+    <model name="tree_7"><static>true</static><pose>-13 1 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.22</radius><length>3</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.22</radius><length>3</length></geometry><material><ambient>0.3 0.2 0.1 1</ambient><diffuse>0.3 0.2 0.1 1</diffuse></material></visual></link></model>
+    <model name="tree_8"><static>true</static><pose>13 3 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.25</radius><length>3</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.25</radius><length>3</length></geometry><material><ambient>0.3 0.2 0.1 1</ambient><diffuse>0.3 0.2 0.1 1</diffuse></material></visual></link></model>
+
+    <!-- ── BENCHES, PLANTERS & STREET FURNITURE ─────────────────────────── -->
+    <model name="bench_1"><static>true</static><pose>-2 5 0.2 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>1.5 0.4 0.4</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>1.5 0.4 0.4</size></box></geometry><material><ambient>0.4 0.3 0.2 1</ambient><diffuse>0.4 0.3 0.2 1</diffuse></material></visual></link></model>
+    <model name="bench_2"><static>true</static><pose>3 -5 0.2 0 0 1.5708</pose>
+      <link name="l"><collision name="c"><geometry><box><size>1.5 0.4 0.4</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>1.5 0.4 0.4</size></box></geometry><material><ambient>0.4 0.3 0.2 1</ambient><diffuse>0.4 0.3 0.2 1</diffuse></material></visual></link></model>
+    <model name="planter_1"><static>true</static><pose>-6 3 0.3 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.8 0.8 0.6</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.8 0.8 0.6</size></box></geometry><material><ambient>0.5 0.4 0.35 1</ambient><diffuse>0.5 0.4 0.35 1</diffuse></material></visual></link></model>
+    <model name="planter_2"><static>true</static><pose>8 -3 0.3 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.8 0.8 0.6</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.8 0.8 0.6</size></box></geometry><material><ambient>0.5 0.4 0.35 1</ambient><diffuse>0.5 0.4 0.35 1</diffuse></material></visual></link></model>
+    <model name="bollard_1"><static>true</static><pose>2 2 0.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.1</radius><length>1</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.1</radius><length>1</length></geometry><material><ambient>0.2 0.2 0.25 1</ambient><diffuse>0.2 0.2 0.25 1</diffuse></material></visual></link></model>
+    <model name="bollard_2"><static>true</static><pose>-2 2 0.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.1</radius><length>1</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.1</radius><length>1</length></geometry><material><ambient>0.2 0.2 0.25 1</ambient><diffuse>0.2 0.2 0.25 1</diffuse></material></visual></link></model>
+    <model name="bollard_3"><static>true</static><pose>2 -2 0.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.1</radius><length>1</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.1</radius><length>1</length></geometry><material><ambient>0.2 0.2 0.25 1</ambient><diffuse>0.2 0.2 0.25 1</diffuse></material></visual></link></model>
+    <model name="parked_car"><static>true</static><pose>-10 -2 0.75 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>4.5 1.8 1.5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>4.5 1.8 1.5</size></box></geometry><material><ambient>0.3 0.3 0.7 1</ambient><diffuse>0.3 0.3 0.7 1</diffuse></material></visual></link></model>
+    <model name="dumpster"><static>true</static><pose>-3 -13 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>1.5 0.8 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>1.5 0.8 1.2</size></box></geometry><material><ambient>0.2 0.5 0.2 1</ambient><diffuse>0.2 0.5 0.2 1</diffuse></material></visual></link></model>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         DYNAMIC OBSTACLES — pedestrians (magenta cylinders)
+         ════════════════════════════════════════════════════════════════════ -->
+
+    <model name="pedestrian_1">
+      <pose>-5 0 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>70</mass><inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>2</izz></inertia></inertial>
+        <collision name="col"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry>
+          <material><ambient>0.9 0.1 0.7 1</ambient><diffuse>0.9 0.1 0.7 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>150</force><torque>30</torque>
+        <waypoints><waypoint>-5 0</waypoint><waypoint>5 0</waypoint><waypoint>5 12</waypoint><waypoint>-5 12</waypoint></waypoints>
+      </plugin>
+    </model>
+
+    <model name="pedestrian_2">
+      <pose>10 8 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>70</mass><inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>2</izz></inertia></inertial>
+        <collision name="col"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry>
+          <material><ambient>0.9 0.1 0.7 1</ambient><diffuse>0.9 0.1 0.7 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>150</force><torque>30</torque>
+        <waypoints><waypoint>10 8</waypoint><waypoint>10 -8</waypoint></waypoints>
+      </plugin>
+    </model>
+
+    <model name="pedestrian_3">
+      <pose>-12 -8 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>70</mass><inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>2</izz></inertia></inertial>
+        <collision name="col"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry>
+          <material><ambient>0.8 0.1 0.6 1</ambient><diffuse>0.8 0.1 0.6 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>150</force><torque>30</torque>
+        <waypoints><waypoint>-12 -8</waypoint><waypoint>-12 5</waypoint></waypoints>
+      </plugin>
+    </model>
+
+    <model name="pedestrian_4">
+      <pose>0 -8 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>70</mass><inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>2</izz></inertia></inertial>
+        <collision name="col"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry>
+          <material><ambient>0.9 0.1 0.7 1</ambient><diffuse>0.9 0.1 0.7 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>150</force><torque>30</torque>
+        <waypoints><waypoint>0 -8</waypoint><waypoint>8 -8</waypoint><waypoint>8 0</waypoint><waypoint>0 0</waypoint></waypoints>
+      </plugin>
+    </model>
+
+    <model name="pedestrian_5">
+      <pose>-8 10 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>70</mass><inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>2</izz></inertia></inertial>
+        <collision name="col"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry>
+          <material><ambient>0.9 0.1 0.7 1</ambient><diffuse>0.9 0.1 0.7 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>150</force><torque>30</torque>
+        <waypoints><waypoint>-8 10</waypoint><waypoint>2 10</waypoint></waypoints>
+      </plugin>
+    </model>
+
+    <model name="pedestrian_6">
+      <pose>14 -6 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>70</mass><inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>2</izz></inertia></inertial>
+        <collision name="col"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry>
+          <material><ambient>0.8 0.2 0.8 1</ambient><diffuse>0.8 0.2 0.8 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>150</force><torque>30</torque>
+        <waypoints><waypoint>14 -6</waypoint><waypoint>14 -20</waypoint></waypoints>
+      </plugin>
+    </model>
+
+  </world>
+</sdf>

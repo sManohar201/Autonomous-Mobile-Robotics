@@ -1,0 +1,270 @@
+<?xml version="1.0" ?>
+<!--
+  Office World — Gazebo Harmonic
+  Designed to challenge SLAM and navigation:
+  - Open-plan with sparse, irregular features (hard for feature-based SLAM)
+  - Cubicle clusters create many similar 3 m × 3 m pockets
+  - Round pillars (cylinders) are poor lidar landmarks
+  - Two enclosed conference rooms add global structure
+  - 5 dynamic person-shaped obstacles (cylinders) walking between desks
+
+  Robot spawns at (0, 0, 0.1) — in the main aisle between two cubicle banks.
+-->
+<sdf version="1.8">
+  <world name="office">
+
+    <plugin filename="gz-sim-physics-system"           name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system"     name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system"           name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system"               name="gz::sim::systems::Imu"/>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows><pose>0 0 15 0 0 0</pose>
+      <diffuse>1 0.98 0.95 1</diffuse><specular>0.2 0.2 0.2 1</specular>
+      <attenuation><range>1000</range><constant>0.9</constant><linear>0.01</linear><quadratic>0.001</quadratic></attenuation>
+      <direction>-0.3 0.1 -0.9</direction>
+    </light>
+
+    <model name="ground_plane"><static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry></collision>
+        <visual name="vis">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <material><ambient>0.75 0.72 0.7 1</ambient><diffuse>0.75 0.72 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ── OUTER WALLS (28 m × 28 m, x=-14 to 14, y=-14 to 14) ───────── -->
+    <model name="wall_n"><static>true</static><pose>0 14.15 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>28.3 0.3 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>28.3 0.3 3</size></box></geometry><material><ambient>0.8 0.78 0.75 1</ambient><diffuse>0.8 0.78 0.75 1</diffuse></material></visual></link></model>
+    <model name="wall_s"><static>true</static><pose>0 -14.15 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>28.3 0.3 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>28.3 0.3 3</size></box></geometry><material><ambient>0.8 0.78 0.75 1</ambient><diffuse>0.8 0.78 0.75 1</diffuse></material></visual></link></model>
+    <model name="wall_e"><static>true</static><pose>14.15 0 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.3 28.3 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.3 28.3 3</size></box></geometry><material><ambient>0.8 0.78 0.75 1</ambient><diffuse>0.8 0.78 0.75 1</diffuse></material></visual></link></model>
+    <model name="wall_w"><static>true</static><pose>-14.15 0 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.3 28.3 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.3 28.3 3</size></box></geometry><material><ambient>0.8 0.78 0.75 1</ambient><diffuse>0.8 0.78 0.75 1</diffuse></material></visual></link></model>
+
+    <!-- ── STRUCTURAL PILLARS (6 round pillars, 0.4 m dia, 3 m tall) ──── -->
+    <model name="pillar_1"><static>true</static><pose>-7 7 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.2</radius><length>3</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.2</radius><length>3</length></geometry><material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material></visual></link></model>
+    <model name="pillar_2"><static>true</static><pose>0 7 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.2</radius><length>3</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.2</radius><length>3</length></geometry><material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material></visual></link></model>
+    <model name="pillar_3"><static>true</static><pose>7 7 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.2</radius><length>3</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.2</radius><length>3</length></geometry><material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material></visual></link></model>
+    <model name="pillar_4"><static>true</static><pose>-7 -7 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.2</radius><length>3</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.2</radius><length>3</length></geometry><material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material></visual></link></model>
+    <model name="pillar_5"><static>true</static><pose>0 -7 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.2</radius><length>3</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.2</radius><length>3</length></geometry><material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material></visual></link></model>
+    <model name="pillar_6"><static>true</static><pose>7 -7 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><cylinder><radius>0.2</radius><length>3</length></geometry></collision>
+      <visual name="v"><geometry><cylinder><radius>0.2</radius><length>3</length></geometry><material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material></visual></link></model>
+
+    <!-- ── CONFERENCE ROOM NORTH-EAST (6 m × 5 m) ─────────────────────── -->
+    <model name="conf_ne_n"><static>true</static><pose>11 12.5 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>6 0.2 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>6 0.2 3</size></box></geometry><material><ambient>0.8 0.8 0.85 1</ambient><diffuse>0.8 0.8 0.85 1</diffuse></material></visual></link></model>
+    <model name="conf_ne_s_w"><static>true</static><pose>8.15 10.5 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.3 4 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.3 4 3</size></box></geometry><material><ambient>0.8 0.8 0.85 1</ambient><diffuse>0.8 0.8 0.85 1</diffuse></material></visual></link></model>
+    <model name="conf_ne_s_e"><static>true</static><pose>13.85 10.5 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.3 4 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.3 4 3</size></box></geometry><material><ambient>0.8 0.8 0.85 1</ambient><diffuse>0.8 0.8 0.85 1</diffuse></material></visual></link></model>
+    <!-- South wall of conf room with door gap -->
+    <model name="conf_ne_door_l"><static>true</static><pose>9.6 8.5 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>3 0.2 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>3 0.2 3</size></box></geometry><material><ambient>0.8 0.8 0.85 1</ambient><diffuse>0.8 0.8 0.85 1</diffuse></material></visual></link></model>
+    <model name="conf_ne_door_r"><static>true</static><pose>12.85 8.5 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>2 0.2 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>2 0.2 3</size></box></geometry><material><ambient>0.8 0.8 0.85 1</ambient><diffuse>0.8 0.8 0.85 1</diffuse></material></visual></link></model>
+    <!-- Conference table -->
+    <model name="conf_ne_table"><static>true</static><pose>11 10.5 0.4 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>4 1.5 0.8</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>4 1.5 0.8</size></box></geometry><material><ambient>0.5 0.35 0.2 1</ambient><diffuse>0.5 0.35 0.2 1</diffuse></material></visual></link></model>
+
+    <!-- ── CONFERENCE ROOM SOUTH-WEST (6 m × 5 m) ─────────────────────── -->
+    <model name="conf_sw_s"><static>true</static><pose>-11 -12.5 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>6 0.2 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>6 0.2 3</size></box></geometry><material><ambient>0.8 0.8 0.85 1</ambient><diffuse>0.8 0.8 0.85 1</diffuse></material></visual></link></model>
+    <model name="conf_sw_w"><static>true</static><pose>-13.85 -10.5 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.3 4 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.3 4 3</size></box></geometry><material><ambient>0.8 0.8 0.85 1</ambient><diffuse>0.8 0.8 0.85 1</diffuse></material></visual></link></model>
+    <model name="conf_sw_e"><static>true</static><pose>-8.15 -10.5 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.3 4 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.3 4 3</size></box></geometry><material><ambient>0.8 0.8 0.85 1</ambient><diffuse>0.8 0.8 0.85 1</diffuse></material></visual></link></model>
+    <model name="conf_sw_door_l"><static>true</static><pose>-13 -8.5 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>2 0.2 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>2 0.2 3</size></box></geometry><material><ambient>0.8 0.8 0.85 1</ambient><diffuse>0.8 0.8 0.85 1</diffuse></material></visual></link></model>
+    <model name="conf_sw_door_r"><static>true</static><pose>-10.1 -8.5 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>3 0.2 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>3 0.2 3</size></box></geometry><material><ambient>0.8 0.8 0.85 1</ambient><diffuse>0.8 0.8 0.85 1</diffuse></material></visual></link></model>
+    <model name="conf_sw_table"><static>true</static><pose>-11 -10.5 0.4 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>4 1.5 0.8</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>4 1.5 0.8</size></box></geometry><material><ambient>0.5 0.35 0.2 1</ambient><diffuse>0.5 0.35 0.2 1</diffuse></material></visual></link></model>
+
+    <!-- ── CUBICLE DIVIDERS (1.2 m high panels, 0.1 m thick) ───────────
+         4 × 4 grid of cubicle clusters, each cluster 3.5 m × 3.5 m.
+         Positioned in the central open area (x=-12 to 7, y=-7 to 7). -->
+
+    <!-- Row 1 (y=-5 to -2): 4 clusters -->
+    <model name="cub_1_1"><static>true</static><pose>-10 -3.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>3 0.1 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>3 0.1 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+    <model name="cub_1_2"><static>true</static><pose>-11.5 -4.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.1 2 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.1 2 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+    <model name="cub_2_1"><static>true</static><pose>-5 -3.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>3 0.1 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>3 0.1 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+    <model name="cub_2_2"><static>true</static><pose>-6.5 -4.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.1 2 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.1 2 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+    <model name="cub_3_1"><static>true</static><pose>0 -3.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>3 0.1 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>3 0.1 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+    <model name="cub_3_2"><static>true</static><pose>-1.5 -4.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.1 2 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.1 2 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+    <model name="cub_4_1"><static>true</static><pose>5 -3.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>3 0.1 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>3 0.1 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+    <model name="cub_4_2"><static>true</static><pose>3.5 -4.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.1 2 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.1 2 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+
+    <!-- Row 2 (y=0 to 3): 4 clusters -->
+    <model name="cub_5_1"><static>true</static><pose>-10 1.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>3 0.1 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>3 0.1 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+    <model name="cub_5_2"><static>true</static><pose>-11.5 0.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.1 2 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.1 2 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+    <model name="cub_6_1"><static>true</static><pose>-5 1.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>3 0.1 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>3 0.1 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+    <model name="cub_6_2"><static>true</static><pose>-6.5 0.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.1 2 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.1 2 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+    <model name="cub_7_1"><static>true</static><pose>0 1.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>3 0.1 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>3 0.1 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+    <model name="cub_7_2"><static>true</static><pose>-1.5 0.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.1 2 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.1 2 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+    <model name="cub_8_1"><static>true</static><pose>5 1.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>3 0.1 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>3 0.1 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+    <model name="cub_8_2"><static>true</static><pose>3.5 0.5 0.6 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.1 2 1.2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.1 2 1.2</size></box></geometry><material><ambient>0.6 0.8 0.6 1</ambient><diffuse>0.6 0.8 0.6 1</diffuse></material></visual></link></model>
+
+    <!-- Desks (flat boxes on the floor) -->
+    <model name="desk1"><static>true</static><pose>-10 -4.8 0.4 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>1.4 0.6 0.8</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>1.4 0.6 0.8</size></box></geometry><material><ambient>0.5 0.4 0.3 1</ambient><diffuse>0.5 0.4 0.3 1</diffuse></material></visual></link></model>
+    <model name="desk2"><static>true</static><pose>-5 -4.8 0.4 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>1.4 0.6 0.8</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>1.4 0.6 0.8</size></box></geometry><material><ambient>0.5 0.4 0.3 1</ambient><diffuse>0.5 0.4 0.3 1</diffuse></material></visual></link></model>
+    <model name="desk3"><static>true</static><pose>0 -4.8 0.4 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>1.4 0.6 0.8</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>1.4 0.6 0.8</size></box></geometry><material><ambient>0.5 0.4 0.3 1</ambient><diffuse>0.5 0.4 0.3 1</diffuse></material></visual></link></model>
+    <model name="desk4"><static>true</static><pose>-10 0.3 0.4 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>1.4 0.6 0.8</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>1.4 0.6 0.8</size></box></geometry><material><ambient>0.5 0.4 0.3 1</ambient><diffuse>0.5 0.4 0.3 1</diffuse></material></visual></link></model>
+
+    <!-- Kitchen / break area obstacle cluster -->
+    <model name="kitchen_counter"><static>true</static><pose>12 0 0.45 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>2 0.6 0.9</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>2 0.6 0.9</size></box></geometry><material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material></visual></link></model>
+    <model name="fridge"><static>true</static><pose>12.8 1.2 0.9 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.7 0.7 1.8</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.7 0.7 1.8</size></box></geometry><material><ambient>0.8 0.8 0.8 1</ambient><diffuse>0.8 0.8 0.8 1</diffuse></material></visual></link></model>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         DYNAMIC OBSTACLES — people walking between cubicles (cyan cylinders)
+         ════════════════════════════════════════════════════════════════════ -->
+
+    <model name="person_1">
+      <pose>-8 -4 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>70</mass><inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>2</izz></inertia></inertial>
+        <collision name="col"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry>
+          <material><ambient>0.0 0.7 0.9 1</ambient><diffuse>0.0 0.7 0.9 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>150</force><torque>30</torque>
+        <waypoints><waypoint>-8 -4</waypoint><waypoint>-8 2</waypoint><waypoint>-3 2</waypoint><waypoint>-3 -4</waypoint></waypoints>
+      </plugin>
+    </model>
+
+    <model name="person_2">
+      <pose>3 -5 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>70</mass><inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>2</izz></inertia></inertial>
+        <collision name="col"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry>
+          <material><ambient>0.0 0.7 0.9 1</ambient><diffuse>0.0 0.7 0.9 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>150</force><torque>30</torque>
+        <waypoints><waypoint>3 -5</waypoint><waypoint>3 3</waypoint></waypoints>
+      </plugin>
+    </model>
+
+    <model name="person_3">
+      <pose>-12 5 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>70</mass><inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>2</izz></inertia></inertial>
+        <collision name="col"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry>
+          <material><ambient>0.0 0.5 0.9 1</ambient><diffuse>0.0 0.5 0.9 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>150</force><torque>30</torque>
+        <waypoints><waypoint>-12 5</waypoint><waypoint>5 5</waypoint><waypoint>5 13</waypoint></waypoints>
+      </plugin>
+    </model>
+
+    <model name="person_4">
+      <pose>10 -5 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>70</mass><inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>2</izz></inertia></inertial>
+        <collision name="col"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry>
+          <material><ambient>0.0 0.7 0.9 1</ambient><diffuse>0.0 0.7 0.9 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>150</force><torque>30</torque>
+        <waypoints><waypoint>10 -5</waypoint><waypoint>10 7</waypoint></waypoints>
+      </plugin>
+    </model>
+
+    <model name="person_5">
+      <pose>-3 -12 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>70</mass><inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>2</izz></inertia></inertial>
+        <collision name="col"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.25</radius><length>1.8</length></geometry>
+          <material><ambient>0.0 0.7 0.9 1</ambient><diffuse>0.0 0.7 0.9 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>150</force><torque>30</torque>
+        <waypoints><waypoint>-3 -12</waypoint><waypoint>8 -12</waypoint><waypoint>8 -8</waypoint><waypoint>-3 -8</waypoint></waypoints>
+      </plugin>
+    </model>
+
+  </world>
+</sdf>

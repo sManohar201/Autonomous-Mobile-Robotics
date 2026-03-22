@@ -1,0 +1,216 @@
+<?xml version="1.0" ?>
+<!--
+  Warehouse World — Gazebo Harmonic
+  Designed to challenge SLAM and navigation:
+  - Repeated shelf patterns create symmetry ambiguity for SLAM
+  - Very narrow aisles (1.8 m) requiring careful navigation
+  - Tall shelves (2.5 m) block long-range lidar returns
+  - Cross-aisle creates many similar-looking T-junctions
+  - 4 dynamic forklift obstacles using TrajectoryFollower
+
+  Robot spawns at (0, 0, 0.1) — in the staging/loading area.
+  The shelf rows extend north (+y) from y=5 to y=26.
+-->
+<sdf version="1.8">
+  <world name="warehouse">
+
+    <plugin filename="gz-sim-physics-system"           name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system"     name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system"           name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system"               name="gz::sim::systems::Imu"/>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows><pose>0 0 20 0 0 0</pose>
+      <diffuse>0.9 0.85 0.7 1</diffuse><specular>0.2 0.2 0.2 1</specular>
+      <attenuation><range>1000</range><constant>0.9</constant><linear>0.01</linear><quadratic>0.001</quadratic></attenuation>
+      <direction>-0.3 0.2 -0.9</direction>
+    </light>
+
+    <model name="ground_plane"><static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry></collision>
+        <visual name="vis">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <material><ambient>0.5 0.5 0.5 1</ambient><diffuse>0.55 0.55 0.55 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         LAYOUT
+         - Staging area: x=-5 to 25, y=-5 to 5
+         - 5 shelf rows (double-sided): y=6 to 26, spaced 4 m centre-to-centre
+         - Each row: 20 m long (x=2 to 22), 1.2 m wide (two 0.6 m shelves back-to-back)
+         - Aisle width: ~2.8 m between adjacent shelf pairs
+         - Cross aisle: x=12 (mid-row gap in each shelf)
+
+         Aisle centres (y-values between rows):
+           y=5–6   loading lane (no shelves)
+           Row A: y=7     (shelf centre)
+           Aisle: y=9.4
+           Row B: y=11    (shelf centre)
+           Aisle: y=13.4
+           Row C: y=15    (shelf centre)
+           Aisle: y=17.4
+           Row D: y=19    (shelf centre)
+           Aisle: y=21.4
+           Row E: y=23    (shelf centre)
+           y=24–26 back wall space
+         ════════════════════════════════════════════════════════════════════ -->
+
+    <!-- ── OUTER BOUNDARY ──────────────────────────────────────────────── -->
+    <model name="wall_south"><static>true</static><pose>10 -5.1 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>32 0.2 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>32 0.2 3</size></box></geometry><material><ambient>0.6 0.55 0.45 1</ambient><diffuse>0.6 0.55 0.45 1</diffuse></material></visual></link></model>
+    <model name="wall_north"><static>true</static><pose>10 25.1 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>32 0.2 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>32 0.2 3</size></box></geometry><material><ambient>0.6 0.55 0.45 1</ambient><diffuse>0.6 0.55 0.45 1</diffuse></material></visual></link></model>
+    <model name="wall_west"><static>true</static><pose>-5.1 10 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.2 30.4 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.2 30.4 3</size></box></geometry><material><ambient>0.6 0.55 0.45 1</ambient><diffuse>0.6 0.55 0.45 1</diffuse></material></visual></link></model>
+    <model name="wall_east"><static>true</static><pose>25.1 10 1.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.2 30.4 3</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.2 30.4 3</size></box></geometry><material><ambient>0.6 0.55 0.45 1</ambient><diffuse>0.6 0.55 0.45 1</diffuse></material></visual></link></model>
+
+    <!-- ── LOADING DOCK (staging area obstacles) ───────────────────────── -->
+    <model name="pallet_1"><static>true</static><pose>-3 2 0.1 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>1.2 0.8 0.15</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>1.2 0.8 0.15</size></box></geometry><material><ambient>0.6 0.4 0.2 1</ambient><diffuse>0.6 0.4 0.2 1</diffuse></material></visual></link></model>
+    <model name="pallet_2"><static>true</static><pose>-3 0 0.1 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>1.2 0.8 0.15</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>1.2 0.8 0.15</size></box></geometry><material><ambient>0.6 0.4 0.2 1</ambient><diffuse>0.6 0.4 0.2 1</diffuse></material></visual></link></model>
+    <model name="crate_1"><static>true</static><pose>-2 3 0.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.8 0.8 1.0</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.8 0.8 1.0</size></box></geometry><material><ambient>0.55 0.42 0.25 1</ambient><diffuse>0.55 0.42 0.25 1</diffuse></material></visual></link></model>
+    <model name="crate_2"><static>true</static><pose>-1.2 3 0.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.8 0.8 1.0</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.8 0.8 1.0</size></box></geometry><material><ambient>0.55 0.42 0.25 1</ambient><diffuse>0.55 0.42 0.25 1</diffuse></material></visual></link></model>
+    <model name="office_box"><static>true</static><pose>22 -3 1 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>4 2 2</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>4 2 2</size></box></geometry><material><ambient>0.7 0.65 0.6 1</ambient><diffuse>0.7 0.65 0.6 1</diffuse></material></visual></link></model>
+
+    <!-- ── SHELF ROWS (5 rows × 2 halves each, gap at cross-aisle x=12) ──
+         Each shelf: 9.5 m long, 0.6 m wide (x 2 = 1.2 m pair), 2.5 m tall
+         Left half:  x=2 to 11.5  (centre x=6.75)
+         Right half: x=12.5 to 22 (centre x=17.25) -->
+
+    <!-- Row A: y=7 -->
+    <model name="rowA_L"><static>true</static><pose>6.75 7 1.25 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>9.5 1.2 2.5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>9.5 1.2 2.5</size></box></geometry><material><ambient>0.6 0.5 0.35 1</ambient><diffuse>0.6 0.5 0.35 1</diffuse></material></visual></link></model>
+    <model name="rowA_R"><static>true</static><pose>17.25 7 1.25 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>9.5 1.2 2.5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>9.5 1.2 2.5</size></box></geometry><material><ambient>0.6 0.5 0.35 1</ambient><diffuse>0.6 0.5 0.35 1</diffuse></material></visual></link></model>
+
+    <!-- Row B: y=11 -->
+    <model name="rowB_L"><static>true</static><pose>6.75 11 1.25 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>9.5 1.2 2.5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>9.5 1.2 2.5</size></box></geometry><material><ambient>0.6 0.5 0.35 1</ambient><diffuse>0.6 0.5 0.35 1</diffuse></material></visual></link></model>
+    <model name="rowB_R"><static>true</static><pose>17.25 11 1.25 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>9.5 1.2 2.5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>9.5 1.2 2.5</size></box></geometry><material><ambient>0.6 0.5 0.35 1</ambient><diffuse>0.6 0.5 0.35 1</diffuse></material></visual></link></model>
+
+    <!-- Row C: y=15 -->
+    <model name="rowC_L"><static>true</static><pose>6.75 15 1.25 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>9.5 1.2 2.5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>9.5 1.2 2.5</size></box></geometry><material><ambient>0.6 0.5 0.35 1</ambient><diffuse>0.6 0.5 0.35 1</diffuse></material></visual></link></model>
+    <model name="rowC_R"><static>true</static><pose>17.25 15 1.25 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>9.5 1.2 2.5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>9.5 1.2 2.5</size></box></geometry><material><ambient>0.6 0.5 0.35 1</ambient><diffuse>0.6 0.5 0.35 1</diffuse></material></visual></link></model>
+
+    <!-- Row D: y=19 -->
+    <model name="rowD_L"><static>true</static><pose>6.75 19 1.25 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>9.5 1.2 2.5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>9.5 1.2 2.5</size></box></geometry><material><ambient>0.6 0.5 0.35 1</ambient><diffuse>0.6 0.5 0.35 1</diffuse></material></visual></link></model>
+    <model name="rowD_R"><static>true</static><pose>17.25 19 1.25 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>9.5 1.2 2.5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>9.5 1.2 2.5</size></box></geometry><material><ambient>0.6 0.5 0.35 1</ambient><diffuse>0.6 0.5 0.35 1</diffuse></material></visual></link></model>
+
+    <!-- Row E: y=23 -->
+    <model name="rowE_L"><static>true</static><pose>6.75 23 1.25 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>9.5 1.2 2.5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>9.5 1.2 2.5</size></box></geometry><material><ambient>0.6 0.5 0.35 1</ambient><diffuse>0.6 0.5 0.35 1</diffuse></material></visual></link></model>
+    <model name="rowE_R"><static>true</static><pose>17.25 23 1.25 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>9.5 1.2 2.5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>9.5 1.2 2.5</size></box></geometry><material><ambient>0.6 0.5 0.35 1</ambient><diffuse>0.6 0.5 0.35 1</diffuse></material></visual></link></model>
+
+    <!-- Boxes ON shelves for extra lidar clutter -->
+    <model name="shelf_box_a1"><static>true</static><pose>4 6.4 0.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.6 0.5 1.0</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.6 0.5 1.0</size></box></geometry><material><ambient>0.8 0.3 0.3 1</ambient><diffuse>0.8 0.3 0.3 1</diffuse></material></visual></link></model>
+    <model name="shelf_box_b1"><static>true</static><pose>15 10.4 0.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.6 0.5 1.0</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.6 0.5 1.0</size></box></geometry><material><ambient>0.3 0.6 0.8 1</ambient><diffuse>0.3 0.6 0.8 1</diffuse></material></visual></link></model>
+    <model name="shelf_box_c1"><static>true</static><pose>8 14.4 0.5 0 0 0</pose>
+      <link name="l"><collision name="c"><geometry><box><size>0.6 0.5 1.0</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.6 0.5 1.0</size></box></geometry><material><ambient>0.3 0.8 0.4 1</ambient><diffuse>0.3 0.8 0.4 1</diffuse></material></visual></link></model>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         DYNAMIC OBSTACLES — forklifts traversing aisles (yellow)
+         ════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Forklift 1: cross-aisle patrol (x-direction) at y=9.2 -->
+    <model name="forklift_1">
+      <pose>2 9.2 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>500</mass><inertia><ixx>50</ixx><ixy>0</ixy><ixz>0</ixz><iyy>50</iyy><iyz>0</iyz><izz>30</izz></inertia></inertial>
+        <collision name="col"><geometry><box><size>1.0 0.8 1.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.0 0.8 1.8</size></box></geometry>
+          <material><ambient>0.9 0.8 0.0 1</ambient><diffuse>0.9 0.8 0.0 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>800</force><torque>200</torque>
+        <waypoints><waypoint>2 9.2</waypoint><waypoint>22 9.2</waypoint></waypoints>
+      </plugin>
+    </model>
+
+    <!-- Forklift 2: aisle patrol (y-direction) between rows A-E at x=4.5 -->
+    <model name="forklift_2">
+      <pose>4.5 7 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>500</mass><inertia><ixx>50</ixx><ixy>0</ixy><ixz>0</ixz><iyy>50</iyy><iyz>0</iyz><izz>30</izz></inertia></inertial>
+        <collision name="col"><geometry><box><size>0.8 1.0 1.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.8 1.0 1.8</size></box></geometry>
+          <material><ambient>0.9 0.8 0.0 1</ambient><diffuse>0.9 0.8 0.0 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>800</force><torque>200</torque>
+        <waypoints><waypoint>4.5 6</waypoint><waypoint>4.5 24</waypoint></waypoints>
+      </plugin>
+    </model>
+
+    <!-- Forklift 3: diagonal patrol across staging area -->
+    <model name="forklift_3">
+      <pose>-3 -3 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>500</mass><inertia><ixx>50</ixx><ixy>0</ixy><ixz>0</ixz><iyy>50</iyy><iyz>0</iyz><izz>30</izz></inertia></inertial>
+        <collision name="col"><geometry><box><size>1.0 0.8 1.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.0 0.8 1.8</size></box></geometry>
+          <material><ambient>1.0 0.6 0.0 1</ambient><diffuse>1.0 0.6 0.0 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>800</force><torque>200</torque>
+        <waypoints><waypoint>-3 -3</waypoint><waypoint>20 4</waypoint><waypoint>-3 -3</waypoint></waypoints>
+      </plugin>
+    </model>
+
+    <!-- Forklift 4: right side aisle patrol at x=19.5 -->
+    <model name="forklift_4">
+      <pose>19.5 23 0.9 0 0 0</pose>
+      <link name="body">
+        <inertial><mass>500</mass><inertia><ixx>50</ixx><ixy>0</ixy><ixz>0</ixz><iyy>50</iyy><iyz>0</iyz><izz>30</izz></inertia></inertial>
+        <collision name="col"><geometry><box><size>0.8 1.0 1.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.8 1.0 1.8</size></box></geometry>
+          <material><ambient>0.9 0.8 0.0 1</ambient><diffuse>0.9 0.8 0.0 1</diffuse></material></visual>
+      </link>
+      <plugin filename="gz-sim-trajectory-follower-system" name="gz::sim::systems::TrajectoryFollower">
+        <link_name>body</link_name><loop>true</loop><force>800</force><torque>200</torque>
+        <waypoints><waypoint>19.5 6</waypoint><waypoint>19.5 24</waypoint></waypoints>
+      </plugin>
+    </model>
+
+  </world>
+</sdf>
