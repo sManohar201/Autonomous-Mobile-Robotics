@@ -47,7 +47,13 @@
          gz topic:  /${prefix}_laser/scan  (gz.msgs.LaserScan)
          ROS2 topic: /${prefix}_laser/scan  (sensor_msgs/msg/LaserScan) -->
     <gazebo reference="${prefix}_laser">
-      <material>Gazebo/DarkGrey</material>
+      <visual>
+        <material>
+          <ambient>0.3 0.3 0.3 1</ambient>
+          <diffuse>0.3 0.3 0.3 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
+        </material>
+      </visual>
       <sensor name="${prefix}_lidar" type="gpu_lidar">
         <topic>/${prefix}_laser/scan</topic>
         <gz_frame_id>${prefix}_laser</gz_frame_id>

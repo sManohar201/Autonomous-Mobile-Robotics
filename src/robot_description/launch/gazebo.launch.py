@@ -28,6 +28,15 @@ Topic bridge map (gz ↔ ROS2):
   /front_laser/scan    LaserScan       gz→ros
   /joint_states        JointState      gz→ros
   /clock               Clock           gz→ros
+
+World selection (world:=<name> or world:=<full/path/to/world.sdf>):
+  empty        — flat ground plane (default)
+  office       — indoor office with rooms and corridors
+  warehouse    — large open warehouse with shelving
+  construction — outdoor construction site with obstacles
+  orchard      — outdoor orchard rows
+  pipeline     — industrial pipeline environment
+  solar_farm   — open outdoor solar farm
 """
 
 import os
@@ -39,6 +48,7 @@ from launch.actions import (
     AppendEnvironmentVariable,
     DeclareLaunchArgument,
     IncludeLaunchDescription,
+    OpaqueFunction,
     TimerAction,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -48,6 +58,32 @@ from launch.substitutions import (
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
+
+# Short-name → absolute path map for built-in worlds.
+# All clearpath_gz worlds already include Sensors, Imu, and NavSat system
+# plugins, so they work with our gpu_lidar and (future) IMU/GPS sensors.
+_CLEARPATH_WORLDS = '/opt/ros/jazzy/share/clearpath_gz/worlds'
+_WORLDS = {
+    'empty':        None,  # resolved to our automaton_world.sdf below
+    'office':       f'{_CLEARPATH_WORLDS}/office.sdf',
+    'warehouse':    f'{_CLEARPATH_WORLDS}/warehouse.sdf',
+    'construction': f'{_CLEARPATH_WORLDS}/construction.sdf',
+    'orchard':      f'{_CLEARPATH_WORLDS}/orchard.sdf',
+    'pipeline':     f'{_CLEARPATH_WORLDS}/pipeline.sdf',
+    'solar_farm':   f'{_CLEARPATH_WORLDS}/solar_farm.sdf',
+}
+
+
+def _resolve_world(context, pkg_share_dir):
+    """Resolve world:= argument — short name or full path."""
+    raw = LaunchConfiguration('world').perform(context)
+    if raw in _WORLDS:
+        path = _WORLDS[raw] or os.path.join(pkg_share_dir, 'worlds', 'automaton_world.sdf')
+    else:
+        path = raw  # treat as a full file path
+    if not os.path.isfile(path):
+        raise FileNotFoundError(f'[gazebo.launch.py] World file not found: {path}')
+    return path
 
 
 def generate_launch_description():
@@ -78,10 +114,13 @@ def generate_launch_description():
         description='Use simulation (Gazebo) clock',
     )
 
-    world_file = DeclareLaunchArgument(
+    world_arg = DeclareLaunchArgument(
         'world',
-        default_value=PathJoinSubstitution([pkg_share, 'worlds', 'automaton_world.sdf']),
-        description='Path to Gazebo world SDF file',
+        default_value='empty',
+        description=(
+            'World to load. Use a short name (empty, office, warehouse, '
+            'construction, orchard, pipeline, solar_farm) or a full path to an SDF file.'
+        ),
     )
 
     x_pos = DeclareLaunchArgument('x', default_value='0.0')
@@ -109,20 +148,26 @@ def generate_launch_description():
     )
 
     # --- Gazebo Harmonic ------------------------------------------------------
-    # gz_sim.launch.py accepts gz_args which are passed directly to `gz sim`.
+    # OpaqueFunction resolves the world short-name to an absolute path at
+    # launch time, then starts Gazebo with that world.
     # -r  = run immediately (don't wait for play button)
     # -v3 = verbosity level 3
 
-    gz_sim = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py'
-            ])
-        ]),
-        launch_arguments={
-            'gz_args': ['-r -v3 ', LaunchConfiguration('world')],
-        }.items(),
-    )
+    def launch_gazebo(context, *args, **kwargs):
+        world_path = _resolve_world(context, pkg_share_dir)
+        gz_sim = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                PathJoinSubstitution([
+                    FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py'
+                ])
+            ]),
+            launch_arguments={
+                'gz_args': f'-r -v3 {world_path}',
+            }.items(),
+        )
+        return [gz_sim]
+
+    gz_sim = OpaqueFunction(function=launch_gazebo)
 
     # --- Spawn robot ---------------------------------------------------------
     # ros_gz_sim's `create` executable spawns a model from the /robot_description
@@ -237,11 +282,11 @@ def generate_launch_description():
     return LaunchDescription([
         gz_resource_path,        # set GZ_SIM_RESOURCE_PATH before anything starts
         use_sim_time,
-        world_file,
+        world_arg,
         x_pos,
         y_pos,
         z_pos,
-        gz_sim,                  # 1. start Gazebo
+        gz_sim,                  # 1. start Gazebo (OpaqueFunction resolves world path)
         bridge,                  # 2. start bridge (delivers /clock immediately)
         delayed_ros_nodes,       # 3. start ROS nodes after clock is established
     ])
