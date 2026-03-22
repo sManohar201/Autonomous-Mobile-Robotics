@@ -22,12 +22,16 @@ Architecture overview:
                                             └─────────────────┘
 
 Topic bridge map (gz ↔ ROS2):
-  /cmd_vel             Twist           ros→gz
-  /odom                Odometry        gz→ros
-  /tf                  TFMessage       gz→ros
-  /front_laser/scan    LaserScan       gz→ros
-  /joint_states        JointState      gz→ros
-  /clock               Clock           gz→ros
+  /cmd_vel               Twist             ros→gz
+  /odom                  Odometry          gz→ros
+  /tf                    TFMessage         gz→ros
+  /clock                 Clock             gz→ros
+  /front_laser/scan      LaserScan         gz→ros   2D lidar
+  /top_lidar_3d/points   PointCloud2       gz→ros   3D lidar (VLP-16)
+  /imu/data              Imu               gz→ros   100 Hz
+  /magnetometer          MagneticField     gz→ros   50 Hz
+  /gps/fix               NavSatFix         gz→ros   10 Hz
+  /joint_states          JointState        gz→ros
 
 World selection (world:=<name> or world:=<full/path/to/world.sdf>):
   empty        — flat ground plane (default)
@@ -213,14 +217,15 @@ def generate_launch_description():
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
             '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-            # /tf intentionally NOT bridged — the DiffDrive plugin publishes
-            # odom→base_link TF with Gazebo sim timestamps over DDS, which
-            # arrive out of order and cause RViz TF buffer time-jump resets.
-            # /odom (the Odometry message) is bridged above and is what the
-            # EKF will consume. The odom→base_link TF will be published by
-            # the diff_drive_controller once ros2_control is wired up.
+            # /tf intentionally NOT bridged — DiffDrive publishes odom→base_link
+            # TF with Gazebo sim timestamps over DDS, which arrive out of order
+            # and cause RViz TF buffer time-jump resets. odom (Odometry) above
+            # is what the EKF consumes; the TF will come from ros2_control later.
             '/front_laser/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
-            # '/imu/data@sensor_msgs/msg/Imu[gz.msgs.IMU',
+            '/top_lidar_3d/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+            '/imu/data@sensor_msgs/msg/Imu[gz.msgs.IMU',
+            '/magnetometer@sensor_msgs/msg/MagneticField[gz.msgs.Magnetometer',
+            '/gps/fix@sensor_msgs/msg/NavSatFix[gz.msgs.NavSat',
         ],
     )
 

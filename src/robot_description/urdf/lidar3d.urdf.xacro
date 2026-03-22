@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ===================================================================
+       Velodyne VLP-16 style 3D LiDAR macro — Gazebo Harmonic version.
+
+       Sensor parameters (matches real VLP-16):
+         Channels     : 16 vertical beams
+         Vertical FOV : −15° to +15°  (30° total)
+         Horizontal   : 360°, 512 samples/rev → ≈0.7° azimuth resolution
+         Range        : 0.5 m – 100 m
+         Update rate  : 10 Hz
+         Noise        : Gaussian σ = 0.01 m
+
+       Topic flow (Gazebo Harmonic):
+         gz transport : /${prefix}_lidar_3d/points  (gz.msgs.PointCloudPacked)
+         ROS2 bridge  : /${prefix}_lidar_3d/points  (sensor_msgs/msg/PointCloud2)
+
+       Usage:
+         <xacro:velodyne_vlp16 prefix="top" mount="lidar3d_mount"/>
+       =================================================================== -->
+
+  <xacro:macro name="velodyne_vlp16"
+               params="prefix mount
+                       update_rate:=10
+                       h_samples:=512
+                       v_samples:=16
+                       min_range:=0.5
+                       max_range:=100.0">
+
+    <link name="${prefix}_lidar_3d_link">
+      <inertial>
+        <mass value="0.830"/>
+        <origin xyz="0 0 0"/>
+        <!-- Solid cylinder: ixx=iyy=m(3r²+h²)/12, izz=mr²/2  r=0.051 h=0.072 -->
+        <inertia ixx="0.000419" ixy="0.0" ixz="0.0"
+                 iyy="0.000419" iyz="0.0"
+                 izz="0.001080"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <!-- Velodyne VLP-16 puck: 103 mm dia, 72 mm tall -->
+          <cylinder radius="0.0515" length="0.072"/>
+        </geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0515" length="0.072"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${prefix}_lidar_3d_joint" type="fixed">
+      <parent link="${mount}"/>
+      <child link="${prefix}_lidar_3d_link"/>
+      <origin xyz="0 0 0.036" rpy="0 0 0"/>
+    </joint>
+
+    <!-- Gazebo Harmonic gpu_lidar with vertical scan (3D point cloud).
+         The Sensors system plugin must be loaded in the world SDF.
+         Topic is in gz domain; bridged to ROS2 in gazebo.launch.py. -->
+    <gazebo reference="${prefix}_lidar_3d_link">
+      <visual>
+        <material>
+          <ambient>0.1 0.1 0.1 1</ambient>
+          <diffuse>0.1 0.1 0.1 1</diffuse>
+          <specular>0.05 0.05 0.05 1</specular>
+        </material>
+      </visual>
+      <sensor name="${prefix}_3d_lidar" type="gpu_lidar">
+        <topic>/${prefix}_lidar_3d/points</topic>
+        <gz_frame_id>${prefix}_lidar_3d_link</gz_frame_id>
+        <update_rate>${update_rate}</update_rate>
+        <visualize>false</visualize>
+        <lidar>
+          <scan>
+            <horizontal>
+              <samples>${h_samples}</samples>
+              <resolution>1</resolution>
+              <min_angle>-3.14159265</min_angle>
+              <max_angle>3.14159265</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>${v_samples}</samples>
+              <resolution>1</resolution>
+              <min_angle>-0.26179939</min_angle>  <!-- -15 deg -->
+              <max_angle>0.26179939</max_angle>   <!-- +15 deg -->
+            </vertical>
+          </scan>
+          <range>
+            <min>${min_range}</min>
+            <max>${max_range}</max>
+            <resolution>0.01</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+        </lidar>
+        <always_on>1</always_on>
+      </sensor>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>

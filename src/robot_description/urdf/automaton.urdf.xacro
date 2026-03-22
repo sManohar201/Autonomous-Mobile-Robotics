@@ -3,6 +3,7 @@
 
     <xacro:include filename="$(find robot_description)/urdf/automaton.gazebo" />
     <xacro:include filename="$(find robot_description)/urdf/laser.urdf.xacro" />
+    <xacro:include filename="$(find robot_description)/urdf/lidar3d.urdf.xacro" />
 
     <xacro:property name="PI" value="3.14159"/>
 
@@ -128,34 +129,61 @@
         <origin xyz="${-wheel_base/2} ${-track_width/2} ${wheel_vertical_offset}" rpy="0.0 0.0 0.0"/>
     </xacro:wheel>
 
-    <!-- <link name="imu_link">
-      <interial>
+    <!-- IMU — mounted at chassis centre (internal sensor) -->
+    <link name="imu_link">
+      <inertial>
         <mass value="0.001"/>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <inertia ixx="${dummy_inertia}" ixy="0.0" ixz="0.0" iyy="${dummy_inertia}" iyz="0.0" izz="${dummy_inertia}"/>
-      </interial>
-    </link> -->
-    <!-- <joint name="imu_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="${dummy_inertia}" ixy="0.0" ixz="0.0"
+                 iyy="${dummy_inertia}" iyz="0.0" izz="${dummy_inertia}"/>
+      </inertial>
+    </link>
+    <joint name="imu_joint" type="fixed">
       <parent link="chassis_link"/>
       <child link="imu_link"/>
-    </joint> -->
+      <origin xyz="0 0 ${chassis_height/2}" rpy="0 0 0"/>
+    </joint>
 
+    <!-- GPS — antenna on top-rear of chassis -->
+    <link name="gps_link">
+      <inertial>
+        <mass value="0.001"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="${dummy_inertia}" ixy="0.0" ixz="0.0"
+                 iyy="${dummy_inertia}" iyz="0.0" izz="${dummy_inertia}"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><cylinder radius="0.02" length="0.03"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+    </link>
+    <joint name="gps_joint" type="fixed">
+      <parent link="chassis_link"/>
+      <child link="gps_link"/>
+      <!-- Top surface of chassis, offset towards rear -->
+      <origin xyz="${-chassis_length/4} 0 ${chassis_height + 0.015}" rpy="0 0 0"/>
+    </joint>
+
+    <!-- 2D LiDAR front mount -->
     <link name="front_mount"/>
     <joint name="front_mount_joint" type="fixed">
       <parent link="chassis_link"/>
       <child link="front_mount"/>
       <origin xyz="${chassis_length/2.2} 0.0 ${chassis_height}" rpy="0.0 0.0 0.0"/>
     </joint>
-    
-    <!-- <link name="rear_mount"/>
-    <joint name="rear_mount_joint" type="fixed">
-      <parent link="chassis_link"/>
-      <child link="rear_mount"/>
-      <origin xyz="${-chassis_length/2.2} 0.0 ${chassis_height}" rpy="0.0 0.0 ${-PI}"/>
-    </joint> -->
 
-    <xacro:hokuyo_ust10 prefix="front" mount="front_mount" />
-    <!-- <xacro:hokuyo_ust10 prefix="rear" mount="rear_mount" /> -->
+    <!-- 3D LiDAR mount — top-centre of chassis -->
+    <link name="lidar3d_mount"/>
+    <joint name="lidar3d_mount_joint" type="fixed">
+      <parent link="chassis_link"/>
+      <child link="lidar3d_mount"/>
+      <origin xyz="0.0 0.0 ${chassis_height}" rpy="0.0 0.0 0.0"/>
+    </joint>
+
+    <!-- Sensors -->
+    <xacro:hokuyo_ust10 prefix="front" mount="front_mount"/>
+    <xacro:velodyne_vlp16 prefix="top" mount="lidar3d_mount"/>
      
     
 </robot>

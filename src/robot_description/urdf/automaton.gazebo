@@ -84,30 +84,70 @@
   </gazebo>
   -->
 
-  <!-- IMU sensor plugin.
-       Re-enable the imu_link and imu_joint in automaton.urdf.xacro first,
-       then uncomment this block. Topic is bridged in the launch file. -->
-  <!--
+  <!-- IMU — 100 Hz, realistic MEMS noise + bias model.
+       gz topic: /imu/data (gz.msgs.IMU)
+       ROS2:     /imu/data (sensor_msgs/msg/Imu)
+       World SDF must load gz-sim-imu-system (already present in all worlds). -->
   <gazebo reference="imu_link">
     <sensor name="imu_sensor" type="imu">
       <always_on>1</always_on>
-      <update_rate>50</update_rate>
+      <update_rate>100</update_rate>
       <topic>/imu/data</topic>
       <gz_frame_id>imu_link</gz_frame_id>
       <imu>
         <angular_velocity>
-          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.005</stddev><bias_mean>0.0</bias_mean><bias_stddev>0.0001</bias_stddev></noise></x>
-          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.005</stddev><bias_mean>0.0</bias_mean><bias_stddev>0.0001</bias_stddev></noise></y>
-          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.005</stddev><bias_mean>0.0</bias_mean><bias_stddev>0.0001</bias_stddev></noise></z>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.003</stddev><bias_mean>0.0001</bias_mean><bias_stddev>0.00005</bias_stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.003</stddev><bias_mean>0.0001</bias_mean><bias_stddev>0.00005</bias_stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.003</stddev><bias_mean>0.0001</bias_mean><bias_stddev>0.00005</bias_stddev></noise></z>
         </angular_velocity>
         <linear_acceleration>
-          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.005</stddev><bias_mean>0.0</bias_mean><bias_stddev>0.0001</bias_stddev></noise></x>
-          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.005</stddev><bias_mean>0.0</bias_mean><bias_stddev>0.0001</bias_stddev></noise></y>
-          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.005</stddev><bias_mean>0.0</bias_mean><bias_stddev>0.0001</bias_stddev></noise></z>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.02</stddev><bias_mean>0.01</bias_mean><bias_stddev>0.001</bias_stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.02</stddev><bias_mean>0.01</bias_mean><bias_stddev>0.001</bias_stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.02</stddev><bias_mean>0.01</bias_mean><bias_stddev>0.001</bias_stddev></noise></z>
         </linear_acceleration>
       </imu>
     </sensor>
   </gazebo>
-  -->
+
+  <!-- Magnetometer — shares imu_link (same physical housing as IMU).
+       gz topic: /magnetometer (gz.msgs.Magnetometer)
+       ROS2:     /magnetometer (sensor_msgs/msg/MagneticField)
+       World SDF must load gz-sim-magnetometer-system. -->
+  <gazebo reference="imu_link">
+    <sensor name="magnetometer_sensor" type="magnetometer">
+      <always_on>1</always_on>
+      <update_rate>50</update_rate>
+      <topic>/magnetometer</topic>
+      <gz_frame_id>imu_link</gz_frame_id>
+      <magnetometer>
+        <x><noise type="gaussian"><mean>0.0</mean><stddev>1.3e-4</stddev></noise></x>
+        <y><noise type="gaussian"><mean>0.0</mean><stddev>1.3e-4</stddev></noise></y>
+        <z><noise type="gaussian"><mean>0.0</mean><stddev>1.3e-4</stddev></noise></z>
+      </magnetometer>
+    </sensor>
+  </gazebo>
+
+  <!-- GPS / NavSat — 10 Hz, mounted on gps_link (top-rear of chassis).
+       gz topic: /gps/fix (gz.msgs.NavSat)
+       ROS2:     /gps/fix (sensor_msgs/msg/NavSatFix)
+       World SDF must load gz-sim-navsat-system. -->
+  <gazebo reference="gps_link">
+    <sensor name="gps_sensor" type="navsat">
+      <always_on>1</always_on>
+      <update_rate>10</update_rate>
+      <topic>/gps/fix</topic>
+      <gz_frame_id>gps_link</gz_frame_id>
+      <navsat>
+        <position_sensing>
+          <horizontal><noise type="gaussian"><mean>0.0</mean><stddev>1.0</stddev></noise></horizontal>
+          <vertical><noise type="gaussian"><mean>0.0</mean><stddev>1.5</stddev></noise></vertical>
+        </position_sensing>
+        <velocity_sensing>
+          <horizontal><noise type="gaussian"><mean>0.0</mean><stddev>0.1</stddev></noise></horizontal>
+          <vertical><noise type="gaussian"><mean>0.0</mean><stddev>0.1</stddev></noise></vertical>
+        </velocity_sensing>
+      </navsat>
+    </sensor>
+  </gazebo>
 
 </robot>

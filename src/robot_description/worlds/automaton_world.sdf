@@ -13,6 +13,8 @@
     SceneBroadcaster  — streams scene state to Gazebo GUI and rviz bridge
     Sensors           — enables sensor simulation (gpu_lidar, imu, etc.)
     Imu               — required alongside Sensors for IMU sensor type
+    NavSat            — required for GPS/NavSat sensor type
+    Magnetometer      — required for magnetometer sensor type
 -->
 <sdf version="1.8">
   <world name="default">
@@ -32,6 +34,10 @@
     </plugin>
     <plugin filename="gz-sim-imu-system"
             name="gz::sim::systems::Imu"/>
+    <plugin filename="gz-sim-navsat-system"
+            name="gz::sim::systems::NavSat"/>
+    <plugin filename="gz-sim-magnetometer-system"
+            name="gz::sim::systems::Magnetometer"/>
 
     <!-- Lighting -->
     <light type="directional" name="sun">
