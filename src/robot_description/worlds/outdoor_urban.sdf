@@ -227,5 +227,42 @@
       </plugin>
     </model>
 
+    <!-- ── COMPOUND WALL — perimeter boundary ───────────────────────────────
+         Encloses the urban area (x ∈ [-32,32], y ∈ [-30,28]).
+         Four wall segments, 4 m high, 0.4 m thick, brick/sandstone colour.
+         East/West walls are 0.8 m longer on each end to close the corners.  -->
+    <model name="perimeter_wall_north">
+      <static>true</static><pose>0 28 2 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>64.8 0.4 4</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>64.8 0.4 4</size></box></geometry>
+          <material><ambient>0.70 0.60 0.48 1</ambient><diffuse>0.70 0.60 0.48 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="perimeter_wall_south">
+      <static>true</static><pose>0 -30 2 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>64.8 0.4 4</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>64.8 0.4 4</size></box></geometry>
+          <material><ambient>0.70 0.60 0.48 1</ambient><diffuse>0.70 0.60 0.48 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="perimeter_wall_east">
+      <static>true</static><pose>32 -1 2 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.4 59.2 4</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.4 59.2 4</size></box></geometry>
+          <material><ambient>0.70 0.60 0.48 1</ambient><diffuse>0.70 0.60 0.48 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="perimeter_wall_west">
+      <static>true</static><pose>-32 -1 2 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.4 59.2 4</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.4 59.2 4</size></box></geometry>
+          <material><ambient>0.70 0.60 0.48 1</ambient><diffuse>0.70 0.60 0.48 1</diffuse></material></visual>
+      </link>
+    </model>
+
   </world>
 </sdf>

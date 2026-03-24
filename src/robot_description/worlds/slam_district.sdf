@@ -371,5 +371,42 @@
     <model name="tr_w2"><static>true</static><pose>-130   0 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
     <model name="tr_w3"><static>true</static><pose>-130  15 0 0 0 0</pose><link name="link"><collision name="col"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose></collision><visual name="vis"><geometry><cylinder><radius>0.3</radius><length>5</length></cylinder></geometry><pose>0 0 2.5 0 0 0</pose><material><ambient>0.22 0.38 0.12 1</ambient><diffuse>0.22 0.38 0.12 1</diffuse></material></visual></link></model>
 
+    <!-- ── COMPOUND WALL — perimeter boundary ───────────────────────────────
+         Encloses the full navigable area (x ∈ [-135,130], y ∈ [-140,130]).
+         Four wall segments, 3 m high, 0.5 m thick, concrete grey.
+         East/West walls are 1 m longer on each end to close the corners.  -->
+    <model name="perimeter_wall_north">
+      <static>true</static><pose>-2.5 130 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>265.5 0.5 3</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>265.5 0.5 3</size></box></geometry>
+          <material><ambient>0.60 0.58 0.54 1</ambient><diffuse>0.60 0.58 0.54 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="perimeter_wall_south">
+      <static>true</static><pose>-2.5 -140 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>265.5 0.5 3</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>265.5 0.5 3</size></box></geometry>
+          <material><ambient>0.60 0.58 0.54 1</ambient><diffuse>0.60 0.58 0.54 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="perimeter_wall_east">
+      <static>true</static><pose>130 -5 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.5 271 3</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.5 271 3</size></box></geometry>
+          <material><ambient>0.60 0.58 0.54 1</ambient><diffuse>0.60 0.58 0.54 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="perimeter_wall_west">
+      <static>true</static><pose>-135 -5 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.5 271 3</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.5 271 3</size></box></geometry>
+          <material><ambient>0.60 0.58 0.54 1</ambient><diffuse>0.60 0.58 0.54 1</diffuse></material></visual>
+      </link>
+    </model>
+
   </world>
 </sdf>

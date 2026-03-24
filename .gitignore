@@ -10,4 +10,10 @@ logs
 
 # temporary files
 rosgraph.png
-rosgraph_ref.pngbuild/\ninstall/\nlog/
+rosgraph_ref.png
+install/
+log/
+
+# course build artifacts
+**/ignore/
+course/**/exercises/build/
