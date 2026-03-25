@@ -17,3 +17,6 @@ log/
 # course build artifacts
 **/ignore/
 course/**/exercises/build/
+course/**/answers/ex[0-9][0-9]_answer
+course/**/answers/ex[0-9][0-9]_answer.exe
+course/**/answers/*/build/
