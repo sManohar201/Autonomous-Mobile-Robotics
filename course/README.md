@@ -41,12 +41,12 @@ Complete all exercises, pass the quiz, and finish the capstone project before mo
 |---|--------|--------|
 | 01 | [Foundations & Toolchain](cpp/01_foundations/concepts.md) | Compilation pipeline, types, const, references, pointers, namespaces, CMake |
 | 02 | [Classes, OOP & RAII](cpp/02_classes_oop_raii/concepts.md) | Classes, invariants, copy/move semantics, Rule of Five, RAII, smart pointers, inheritance, virtual dispatch, operator overloading, factory pattern |
-| 03 | Templates & Generic Programming | Function/class templates, partial specialisation, CRTP, type traits, `if constexpr`, C++20 concepts |
-| 04 | Modern C++ | `auto`, structured bindings, lambdas, `std::function`, `optional`, `variant`, `constexpr if` |
-| 05 | Standard Library | Containers, iterators, algorithms, `chrono`, `string_view` |
-| 06 | Concurrency | Threads, mutex, `condition_variable`, `atomic`, futures, thread pool |
-| 07 | Performance & Tooling | Cache hierarchy, SIMD basics, sanitisers, GDB, `perf`, CMake advanced |
-| 08 | Robotics Patterns | Eigen, observer pattern, plugin architecture, FSM, component entity system |
+| 03 | [Templates & Generic Programming](cpp/03_templates_generic_programming/concepts.md) | Function/class templates, partial specialisation, CRTP, type traits, `if constexpr`, C++20 concepts |
+| 04 | [Modern C++](cpp/04_modern_cpp/concepts.md) | `auto`, structured bindings, lambdas, `std::function`, `optional`, `variant`, `constexpr if` |
+| 05 | [Standard Library](cpp/05_standard_library/concepts.md) | Containers, iterators, algorithms, `chrono`, `string_view` |
+| 06 | [Concurrency](cpp/06_concurrency/concepts.md) | Threads, mutex, `condition_variable`, `atomic`, futures, thread pool |
+| 07 | [Performance & Tooling](cpp/07_performance_tooling/concepts.md) | Cache hierarchy, SIMD basics, sanitisers, GDB, `perf`, CMake advanced |
+| 08 | [Robotics Patterns](cpp/08_robotics_patterns/concepts.md) | Eigen, observer pattern, plugin architecture, FSM, component entity system |
 
 ---
 

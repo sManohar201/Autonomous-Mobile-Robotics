@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.16)
+project(module07_performance_tooling_answers CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_executable(ex01_benchmark_timer_answer ex01_benchmark_timer_answer.cpp)
+add_executable(ex02_allocation_answer ex02_allocation_answer.cpp)
+add_executable(ex03_cache_layout_answer ex03_cache_layout_answer.cpp)
+add_executable(ex04_sanitizer_bughunt_answer ex04_sanitizer_bughunt_answer.cpp)
+add_executable(ex05_capstone_pointcloud_transform_answer ex05_capstone_pointcloud_transform_answer.cpp)
+
+add_executable(ex01_hard_answer ex01_hard_answer.cpp)
+add_executable(ex02_hard_answer ex02_hard_answer.cpp)
+add_executable(ex03_hard_answer ex03_hard_answer.cpp)
+add_executable(ex04_hard_answer ex04_hard_answer.cpp)
+add_executable(ex05_hard_answer ex05_hard_answer.cpp)

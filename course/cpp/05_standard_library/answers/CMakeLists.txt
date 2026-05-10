@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.16)
+project(module05_standard_library_answers CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_executable(ex01_containers_answer ex01_containers_answer.cpp)
+add_executable(ex02_algorithms_answer ex02_algorithms_answer.cpp)
+add_executable(ex03_chrono_answer ex03_chrono_answer.cpp)
+add_executable(ex04_string_view_answer ex04_string_view_answer.cpp)
+add_executable(ex05_capstone_sensor_window_answer ex05_capstone_sensor_window_answer.cpp)
+
+add_executable(ex01_hard_answer ex01_hard_answer.cpp)
+add_executable(ex02_hard_answer ex02_hard_answer.cpp)
+add_executable(ex03_hard_answer ex03_hard_answer.cpp)
+add_executable(ex04_hard_answer ex04_hard_answer.cpp)
+add_executable(ex05_hard_answer ex05_hard_answer.cpp)

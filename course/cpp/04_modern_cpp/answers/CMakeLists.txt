@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.16)
+project(module04_modern_cpp_answers CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_executable(ex01_auto_structured_bindings_answer ex01_auto_structured_bindings_answer.cpp)
+add_executable(ex02_lambdas_algorithms_answer ex02_lambdas_algorithms_answer.cpp)
+add_executable(ex03_optional_variant_answer ex03_optional_variant_answer.cpp)
+add_executable(ex04_constexpr_folds_answer ex04_constexpr_folds_answer.cpp)
+add_executable(ex05_capstone_config_state_machine_answer ex05_capstone_config_state_machine_answer.cpp)
+
+add_executable(ex01_hard_answer ex01_hard_answer.cpp)
+add_executable(ex02_hard_answer ex02_hard_answer.cpp)
+add_executable(ex03_hard_answer ex03_hard_answer.cpp)
+add_executable(ex04_hard_answer ex04_hard_answer.cpp)
+add_executable(ex05_hard_answer ex05_hard_answer.cpp)

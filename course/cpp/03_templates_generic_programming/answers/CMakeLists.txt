@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.20)
+project(module03_template_answers CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_executable(ex01_function_templates_answer ex01_function_templates_answer.cpp)
+add_executable(ex02_static_vector_answer ex02_static_vector_answer.cpp)
+add_executable(ex03_traits_concepts_answer ex03_traits_concepts_answer.cpp)
+add_executable(ex04_crtp_units_answer ex04_crtp_units_answer.cpp)
+add_executable(ex05_capstone_typed_ring_buffer_answer ex05_capstone_typed_ring_buffer_answer.cpp)
+
+add_executable(ex01_hard_answer ex01_hard_answer.cpp)
+add_executable(ex02_hard_answer ex02_hard_answer.cpp)
+add_executable(ex03_hard_answer ex03_hard_answer.cpp)
+add_executable(ex04_hard_answer ex04_hard_answer.cpp)
+add_executable(ex05_hard_answer ex05_hard_answer.cpp)

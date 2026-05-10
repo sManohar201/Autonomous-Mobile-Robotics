@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C++ Review</title>
+<script src="cards.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:           #0d1117;
+  --surface:      #161b22;
+  --card-bg:      #1c2128;
+  --border:       #30363d;
+  --text:         #e6edf3;
+  --muted:        #7d8590;
+  --accent:       #7c71d8;
+  --accent-dim:   rgba(124,113,216,0.15);
+  --accent-hover: rgba(124,113,216,0.25);
+  --again:  #f85149;
+  --hard:   #d29922;
+  --good:   #3fb950;
+  --easy:   #58a6ff;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  min-height: 100vh;
+}
+
+/* ── Nav ─────────────────────────────────────── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  height: 54px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav-brand { font-weight: 700; font-size: 15px; letter-spacing: -0.02em; }
+.nav-tabs  { display: flex; gap: 4px; }
+
+.tab {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.tab:hover  { color: var(--text); background: var(--card-bg); }
+.tab.active { color: var(--accent); background: var(--accent-dim); }
+
+/* ── Layout ──────────────────────────────────── */
+#main {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* ── Card (study) ────────────────────────────── */
+.study-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.75rem 2rem;
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1.25rem;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.badge-module  { background: rgba(88,166,255,0.12); color: #58a6ff; }
+.badge-quiz    { background: rgba(63,185,80,0.12);  color: #3fb950; }
+.badge-concept { background: rgba(124,113,216,0.15); color: #9d93e8; }
+
+.card-front, .card-back {
+  overflow-y: auto;
+  max-height: 500px;
+}
+.card-front { font-size: 15.5px; }
+.card-back  { font-size: 14px; }
+
+.flip-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.5rem 0;
+}
+
+/* ── Buttons ─────────────────────────────────── */
+.btn-flip {
+  display: block;
+  margin: 1.5rem auto 0;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid rgba(124,113,216,0.35);
+  padding: 11px 36px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-flip:hover { background: var(--accent-hover); }
+
+.rating-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 1.25rem;
+}
+.btn-rate {
+  padding: 10px 4px;
+  border-radius: 8px;
+  border: 1px solid;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn-rate:hover  { opacity: 0.85; }
+.btn-rate:active { transform: scale(0.97); }
+.btn-rate .key   { font-size: 10px; opacity: 0.55; font-weight: 400; }
+
+.btn-again { background: rgba(248,81,73,0.12);  color: var(--again); border-color: rgba(248,81,73,0.3); }
+.btn-hard  { background: rgba(210,153,34,0.12); color: var(--hard);  border-color: rgba(210,153,34,0.3); }
+.btn-good  { background: rgba(63,185,80,0.12);  color: var(--good);  border-color: rgba(63,185,80,0.3); }
+.btn-easy  { background: rgba(88,166,255,0.12); color: var(--easy);  border-color: rgba(88,166,255,0.3); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 11px 40px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-primary:hover    { opacity: 0.88; }
+.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── Progress ────────────────────────────────── */
+.progress-wrap { margin-top: 1.5rem; }
+.progress-bar  {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.35s ease;
+}
+.progress-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 7px;
+}
+
+/* ── Session home ────────────────────────────── */
+.session-home {
+  text-align: center;
+  padding: 3.5rem 0;
+}
+.due-count { font-size: 4.5rem; font-weight: 700; color: var(--accent); line-height: 1; }
+.due-label { color: var(--muted); font-size: 14px; margin: 8px 0 2rem; }
+
+/* ── Session complete ────────────────────────── */
+.session-complete { text-align: center; padding: 3.5rem 0; }
+.complete-check   { font-size: 2.5rem; margin-bottom: 1rem; color: var(--good); }
+.complete-title   { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+.complete-sub     { color: var(--muted); font-size: 14px; margin-bottom: 2rem; }
+
+/* ── Keyboard hints ──────────────────────────── */
+.kb-hint {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 10px;
+}
+kbd {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-family: inherit;
+}
+
+/* ── Stats view ──────────────────────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 2rem;
+}
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  text-align: center;
+}
+.stat-num   { font-size: 2.25rem; font-weight: 700; color: var(--accent); line-height: 1; }
+.stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.module-rows { display: flex; flex-direction: column; gap: 10px; }
+.module-row  {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+.module-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.module-row-name  { font-size: 14px; font-weight: 600; }
+.module-row-count { font-size: 12px; color: var(--muted); }
+.module-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.module-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+}
+.reset-link {
+  display: block;
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.reset-link:hover { color: var(--again); }
+
+/* ── Browse view ─────────────────────────────── */
+.filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.filter-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+  padding: 4px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+.browse-count { font-size: 13px; color: var(--muted); margin: 12px 0 16px; }
+.browse-list  { display: flex; flex-direction: column; gap: 7px; }
+
+.browse-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.9rem 1.15rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.browse-card:hover { border-color: rgba(124,113,216,0.5); }
+.browse-card.open  { border-color: var(--accent); }
+
+.browse-front {
+  font-size: 14px;
+  margin-bottom: 5px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.browse-meta  {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted);
+}
+.browse-back {
+  display: none;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+.browse-card.open .browse-back { display: block; }
+
+/* ── Empty / error states ────────────────────── */
+.empty {
+  padding: 3.5rem 1rem;
+  text-align: center;
+  color: var(--muted);
+}
+.empty code {
+  font-size: 13px;
+  background: var(--surface);
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--text);
+}
+
+/* ── Markdown rendering ──────────────────────── */
+.md p           { margin: 0 0 0.75em; }
+.md p:last-child { margin-bottom: 0; }
+.md code {
+  font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+  font-size: 0.865em;
+  background: rgba(110,118,129,0.18);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+}
+.md pre {
+  background: #0a0d12;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  margin: 0.65em 0;
+}
+.md pre code   { background: none; padding: 0; font-size: 13px; line-height: 1.55; }
+.md strong     { font-weight: 700; color: var(--text); }
+.md em         { color: #cba6f7; font-style: italic; }
+.md h2, .md h3 { font-size: 0.95em; font-weight: 700; margin: 0.8em 0 0.35em; color: var(--text); }
+.md ul, .md ol { padding-left: 1.5em; margin: 0.4em 0; }
+.md li         { margin: 0.2em 0; }
+.md hr         { border: none; border-top: 1px solid var(--border); margin: 1em 0; }
+
+/* ── Misc ────────────────────────────────────── */
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">C++ Review</div>
+  <div class="nav-tabs">
+    <button class="tab active" data-view="study">Study</button>
+    <button class="tab" data-view="browse">Browse</button>
+    <button class="tab" data-view="stats">Stats</button>
+  </div>
+</nav>
+
+<div id="main"></div>
+
+<script>
+// ─── Markdown renderer ────────────────────────────────────────────────────────
+function md(text) {
+  if (!text) return '';
+  const savedBlocks = [];
+
+  // 1. Extract and protect fenced code blocks
+  let h = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+    savedBlocks.push(`<pre><code>${esc(code.trimEnd())}</code></pre>`);
+    return `\x00B${savedBlocks.length - 1}\x00`;
+  });
+
+  // 2. Escape remaining HTML
+  h = esc(h);
+
+  // 3. Inline code
+  h = h.replace(/`([^`\n]+)`/g, (_, c) => `<code>${c}</code>`);
+
+  // 4. Bold / italic
+  h = h.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/\*([^*\n]+)\*/g,   '<em>$1</em>');
+
+  // 5. Lists (line-by-line pass)
+  const lines = h.split('\n');
+  const out = [];
+  let inList = false;
+  for (const line of lines) {
+    const num = line.match(/^\d+\. (.+)/);
+    const bul = line.match(/^[*\-] (.+)/);
+    if (num || bul) {
+      if (!inList) { out.push('<ul>'); inList = true; }
+      out.push(`<li>${(num || bul)[1]}</li>`);
+    } else {
+      if (inList) { out.push('</ul>'); inList = false; }
+      out.push(line);
+    }
+  }
+  if (inList) out.push('</ul>');
+  h = out.join('\n');
+
+  // 6. Paragraphs (split on blank lines)
+  h = h.split(/\n\n+/).map(block => {
+    block = block.trim();
+    if (!block) return '';
+    if (/^\x00B\d+\x00$/.test(block)) return block;   // lone code block
+    if (/^<(ul|li|h[23])/.test(block)) return block;  // block-level HTML
+    return `<p>${block.replace(/\n/g, ' ')}</p>`;
+  }).join('\n');
+
+  // 7. Restore code blocks
+  h = h.replace(/\x00B(\d+)\x00/g, (_, i) => savedBlocks[+i]);
+  return h;
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function truncate(text, n) {
+  // Strip markdown for preview
+  const plain = text
+    .replace(/```[\s\S]*?```/g, '[code]')
+    .replace(/`[^`]+`/g, '…')
+    .replace(/\*+/g, '');
+  return plain.length > n ? plain.slice(0, n) + '…' : plain;
+}
+
+// ─── SM-2 ─────────────────────────────────────────────────────────────────────
+const SM2 = {
+  defaultState: () => ({ ef: 2.5, interval: 0, reps: 0, nextReview: today() }),
+
+  // quality: 0=Again, 1=Hard, 2=Good, 3=Easy  →  SM2 grades: 0, 3, 4, 5
+  update(state, quality) {
+    const q = [0, 3, 4, 5][quality];
+    let { ef, interval, reps } = state;
+
+    if (q < 3) {
+      reps = 0;
+      interval = 1;
+    } else {
+      interval = reps === 0 ? 1 : reps === 1 ? 6 : Math.round(interval * ef);
+      ef = Math.max(1.3, ef + 0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
+      reps++;
+    }
+
+    const next = new Date();
+    next.setDate(next.getDate() + interval);
+    return { ef, interval, reps, nextReview: next.toISOString().split('T')[0] };
+  }
+};
+
+// ─── Storage ──────────────────────────────────────────────────────────────────
+const Store = {
+  KEY:        'cpp_review_sm2_v1',
+  STREAK_KEY: 'cpp_review_streak_v1',
+
+  load()     { try { return JSON.parse(localStorage.getItem(this.KEY) || '{}'); } catch { return {}; } },
+  save(data) { localStorage.setItem(this.KEY, JSON.stringify(data)); },
+
+  getState(id)         { return this.load()[id] || SM2.defaultState(); },
+  setState(id, state)  { const d = this.load(); d[id] = state; this.save(d); },
+
+  reset() { localStorage.removeItem(this.KEY); localStorage.removeItem(this.STREAK_KEY); },
+
+  loadStreak() {
+    try { return JSON.parse(localStorage.getItem(this.STREAK_KEY) || '{"count":0,"lastDay":""}'); }
+    catch { return { count: 0, lastDay: '' }; }
+  },
+
+  updateStreak() {
+    const t = today();
+    const s = this.loadStreak();
+    if (s.lastDay === t) return s.count; // already updated today
+    const yesterday = new Date(t);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const count = s.lastDay === yesterday.toISOString().split('T')[0] ? s.count + 1 : 1;
+    localStorage.setItem(this.STREAK_KEY, JSON.stringify({ count, lastDay: t }));
+    return count;
+  }
+};
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function moduleLabel(modId) {
+  return modId.replace(/^\d+_/, '').replace(/_/g, ' ');
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+const App = {
+  view:          'study',
+  session:       null,    // { cards[], index, flipped, reviewed, done }
+  browseFilter:  { module: 'all', type: 'all' },
+  openCardId:    null,    // expanded card in browse view
+
+  get cards() { return window.CARDS || []; },
+
+  dueCards() {
+    const t   = today();
+    const data = Store.load();
+    return this.cards.filter(c => {
+      const s = data[c.id];
+      return !s || s.nextReview <= t;
+    });
+  },
+
+  // ── Study ──────────────────────────────────────────
+  startSession() {
+    const cards = [...this.dueCards()].sort(() => Math.random() - 0.5);
+    this.session = { cards, index: 0, flipped: false, reviewed: 0, done: false };
+    this.render();
+  },
+
+  flip() {
+    if (!this.session || this.session.flipped || this.session.done) return;
+    this.session.flipped = true;
+    this.render();
+  },
+
+  rate(quality) {
+    if (!this.session?.flipped || this.session.done) return;
+    const card = this.session.cards[this.session.index];
+    Store.setState(card.id, SM2.update(Store.getState(card.id), quality));
+    this.session.reviewed++;
+    this.session.index++;
+    this.session.flipped = false;
+    if (this.session.index >= this.session.cards.length) {
+      Store.updateStreak();
+      this.session.done = true;
+    }
+    this.render();
+  },
+
+  // ── Routing ────────────────────────────────────────
+  setView(v) {
+    this.view    = v;
+    this.session = null;
+    this.render();
+  },
+
+  // ── Render ─────────────────────────────────────────
+  render() {
+    document.querySelectorAll('.tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.view === this.view));
+
+    const el = document.getElementById('main');
+    if      (this.view === 'study')  el.innerHTML = this.studyHTML();
+    else if (this.view === 'browse') el.innerHTML = this.browseHTML();
+    else if (this.view === 'stats')  el.innerHTML = this.statsHTML();
+
+    this.bindEvents();
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // STUDY VIEW
+  // ─────────────────────────────────────────────────────────
+  studyHTML() {
+    if (!this.cards.length) return `
+      <div class="empty">
+        <p>No cards loaded.</p>
+        <p style="margin-top:10px;font-size:13px;">
+          Run <code>python3 generate_cards.py</code> in <code>course/review/</code>,
+          then reload this page.
+        </p>
+      </div>`;
+
+    if (!this.session)          return this.homeHTML();
+    if (this.session.done)      return this.completeHTML();
+    return this.cardHTML();
+  },
+
+  homeHTML() {
+    const due = this.dueCards().length;
+    return `
+      <div class="session-home">
+        <div class="due-count">${due}</div>
+        <div class="due-label">card${due !== 1 ? 's' : ''} due for review</div>
+        <button class="btn-primary" id="js-start" ${due === 0 ? 'disabled' : ''}>
+          ${due === 0 ? 'All caught up ✓' : 'Start Session'}
+        </button>
+        ${due === 0
+          ? '<p style="margin-top:14px;font-size:13px;color:var(--muted)">Come back tomorrow for more reviews.</p>'
+          : ''}
+      </div>`;
+  },
+
+  cardHTML() {
+    const { cards, index, flipped } = this.session;
+    const card = cards[index];
+    const pct  = Math.round((index / cards.length) * 100);
+
+    return `
+      <div class="study-card">
+        <div class="card-meta">
+          <span class="badge badge-module">${esc(moduleLabel(card.module))}</span>
+          <span class="badge badge-${card.type}">${card.type}</span>
+        </div>
+
+        <div class="card-front md">${md(card.front)}</div>
+
+        ${flipped ? `
+          <hr class="flip-divider">
+          <div class="card-back md">${md(card.back)}</div>
+        ` : ''}
+      </div>
+
+      ${!flipped ? `
+        <button class="btn-flip" id="js-flip">Show Answer</button>
+        <p class="kb-hint">Press <kbd>Space</kbd> to flip</p>
+      ` : `
+        <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:1.25rem;margin-bottom:10px;">
+          How well did you know this?
+        </p>
+        <div class="rating-bar">
+          <button class="btn-rate btn-again" data-q="0">Again<span class="key">1</span></button>
+          <button class="btn-rate btn-hard"  data-q="1">Hard<span class="key">2</span></button>
+          <button class="btn-rate btn-good"  data-q="2">Good<span class="key">3</span></button>
+          <button class="btn-rate btn-easy"  data-q="3">Easy<span class="key">4</span></button>
+        </div>
+        <p class="kb-hint">
+          <kbd>1</kbd> Again &nbsp; <kbd>2</kbd> Hard &nbsp; <kbd>3</kbd> Good &nbsp; <kbd>4</kbd> Easy
+        </p>
+      `}
+
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <p class="progress-label">${index} / ${cards.length} reviewed this session</p>
+      </div>`;
+  },
+
+  completeHTML() {
+    const n = this.session.reviewed;
+    return `
+      <div class="session-complete">
+        <div class="complete-check">✓</div>
+        <div class="complete-title">Session complete</div>
+        <div class="complete-sub">Reviewed ${n} card${n !== 1 ? 's' : ''}</div>
+        <button class="btn-primary" id="js-restart">Back to Home</button>
+      </div>`;
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // BROWSE VIEW
+  // ─────────────────────────────────────────────────────────
+  browseHTML() {
+    const { module: mf, type: tf } = this.browseFilter;
+    const modules = [...new Set(this.cards.map(c => c.module))];
+    const data    = Store.load();
+    const t       = today();
+
+    const filtered = this.cards.filter(c =>
+      (mf === 'all' || c.module === mf) && (tf === 'all' || c.type === tf));
+
+    const modBtns = ['all', ...modules].map(m => `
+      <button class="filter-btn ${mf === m ? 'active' : ''}" data-mod="${m}">
+        ${m === 'all' ? 'All Modules' : moduleLabel(m)}
+      </button>`).join('');
+
+    const typeBtns = ['all', 'quiz', 'concept'].map(tp => `
+      <button class="filter-btn ${tf === tp ? 'active' : ''}" data-type="${tp}">
+        ${tp === 'all' ? 'All Types' : tp.charAt(0).toUpperCase() + tp.slice(1)}
+      </button>`).join('');
+
+    const cards = filtered.map(c => {
+      const s       = data[c.id];
+      const isDue   = !s || s.nextReview <= t;
+      const nextLbl = s ? (isDue ? 'due now' : `in ${s.interval}d`) : 'new';
+      const open    = this.openCardId === c.id;
+
+      return `
+        <div class="browse-card ${open ? 'open' : ''}" data-card-id="${c.id}">
+          <div class="browse-front">${esc(truncate(c.front, 130))}</div>
+          <div class="browse-meta">
+            <span class="badge badge-module" style="font-size:10px;">${esc(moduleLabel(c.module))}</span>
+            <span class="badge badge-${c.type}" style="font-size:10px;">${c.type}</span>
+            <span>${nextLbl}</span>
+          </div>
+          <div class="browse-back md">${md(c.back)}</div>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="filter-row">${modBtns}</div>
+      <div class="filter-row">${typeBtns}</div>
+      <p class="browse-count">${filtered.length} cards</p>
+      <div class="browse-list">
+        ${cards || '<div class="empty">No cards match this filter.</div>'}
+      </div>`;
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // STATS VIEW
+  // ─────────────────────────────────────────────────────────
+  statsHTML() {
+    const data    = Store.load();
+    const t       = today();
+    const streak  = Store.loadStreak();
+    const total   = this.cards.length;
+    const due     = this.cards.filter(c => { const s = data[c.id]; return !s || s.nextReview <= t; }).length;
+    const learned = this.cards.filter(c => data[c.id]?.interval > 0).length;
+    const modules = [...new Set(this.cards.map(c => c.module))];
+
+    const moduleRows = modules.map(mod => {
+      const mc  = this.cards.filter(c => c.module === mod);
+      const ml  = mc.filter(c => data[c.id]?.interval > 0).length;
+      const pct = mc.length ? Math.round((ml / mc.length) * 100) : 0;
+      const name = moduleLabel(mod).replace(/\b\w/g, l => l.toUpperCase());
+      return `
+        <div class="module-row">
+          <div class="module-row-head">
+            <span class="module-row-name">${esc(name)}</span>
+            <span class="module-row-count">${ml} / ${mc.length} learned</span>
+          </div>
+          <div class="module-bar"><div class="module-bar-fill" style="width:${pct}%"></div></div>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-num">${due}</div><div class="stat-label">Due Today</div></div>
+        <div class="stat-card"><div class="stat-num">${learned}</div><div class="stat-label">Learned</div></div>
+        <div class="stat-card"><div class="stat-num">${streak.count}</div><div class="stat-label">Day Streak</div></div>
+      </div>
+      <p class="section-title">Progress by Module</p>
+      <div class="module-rows">${moduleRows}</div>
+      <span class="reset-link" id="js-reset">Reset all progress</span>`;
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // EVENT BINDING
+  // ─────────────────────────────────────────────────────────
+  bindEvents() {
+    // Study
+    document.getElementById('js-start')?.addEventListener('click', () => this.startSession());
+    document.getElementById('js-flip')?.addEventListener('click',  () => this.flip());
+    document.getElementById('js-restart')?.addEventListener('click', () => { this.session = null; this.render(); });
+
+    document.querySelectorAll('[data-q]').forEach(b =>
+      b.addEventListener('click', () => this.rate(+b.dataset.q)));
+
+    // Browse filters
+    document.querySelectorAll('[data-mod]').forEach(b =>
+      b.addEventListener('click', () => { this.browseFilter.module = b.dataset.mod; this.render(); }));
+    document.querySelectorAll('[data-type]').forEach(b =>
+      b.addEventListener('click', () => { this.browseFilter.type = b.dataset.type; this.render(); }));
+
+    // Browse expand/collapse
+    document.querySelectorAll('[data-card-id]').forEach(el =>
+      el.addEventListener('click', () => {
+        this.openCardId = this.openCardId === el.dataset.cardId ? null : el.dataset.cardId;
+        this.render();
+      }));
+
+    // Reset
+    document.getElementById('js-reset')?.addEventListener('click', () => {
+      if (confirm('Reset all SM-2 progress? This cannot be undone.')) {
+        Store.reset();
+        this.render();
+      }
+    });
+  }
+};
+
+// ─── Keyboard shortcuts ───────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+  if (e.code === 'Space' && App.view === 'study' && App.session && !App.session.flipped && !App.session.done) {
+    e.preventDefault();
+    App.flip();
+    return;
+  }
+  if (App.view === 'study' && App.session?.flipped && !App.session.done) {
+    if (e.key === '1') App.rate(0);
+    if (e.key === '2') App.rate(1);
+    if (e.key === '3') App.rate(2);
+    if (e.key === '4') App.rate(3);
+  }
+});
+
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t =>
+  t.addEventListener('click', () => App.setView(t.dataset.view)));
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+App.render();
+</script>
+</body>
+</html>

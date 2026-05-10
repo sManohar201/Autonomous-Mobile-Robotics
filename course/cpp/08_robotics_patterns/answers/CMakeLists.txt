@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.16)
+project(module08_robotics_patterns_answers CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_executable(ex01_observer_answer ex01_observer_answer.cpp)
+add_executable(ex02_plugin_factory_answer ex02_plugin_factory_answer.cpp)
+add_executable(ex03_fsm_answer ex03_fsm_answer.cpp)
+add_executable(ex04_components_answer ex04_components_answer.cpp)
+add_executable(ex05_capstone_localization_answer ex05_capstone_localization_answer.cpp)
+
+add_executable(ex01_hard_answer ex01_hard_answer.cpp)
+add_executable(ex02_hard_answer ex02_hard_answer.cpp)
+add_executable(ex03_hard_answer ex03_hard_answer.cpp)
+add_executable(ex04_hard_answer ex04_hard_answer.cpp)
+add_executable(ex05_hard_answer ex05_hard_answer.cpp)
