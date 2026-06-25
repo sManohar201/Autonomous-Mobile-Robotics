@@ -1,102 +1,49 @@
 // Exercise 03 (Hard) — Pointer Arithmetic, Dangling References, Const Overloads,
 //                      and Function Pointers
 // ─────────────────────────────────────────────────────────────────────────────
-//
-// CONTEXT:
-//   Real-time robotics requires fixed-capacity, allocation-free data structures.
-//   nav2's costmap, robot_localization's filter buffer, and ROS2 sensor drivers
-//   all use fixed ring buffers to avoid heap allocation in hot paths. Writing
-//   these correctly requires a precise understanding of pointer arithmetic and
-//   const-correct interfaces.
-//
-// ─────────────────────────────────────────────────────────────────────────────
-// PRE-CODING RESEARCH QUESTIONS — Answer in the spaces provided.
-// ─────────────────────────────────────────────────────────────────────────────
 
 // Q1. Is `arr + N` (one-past-the-end of arr[N]) a valid pointer in C++?
-//     Can you dereference it? What is its only legal use?
-//
-//     YOUR ANSWER:
-//     TODO
+//     Yes. Forming a pointer to one past the end is valid. You CANNOT dereference it.
+//     Its only legal use: comparison with other valid pointers in the same array
+//     (e.g., as a sentinel in while(ptr != end) loops).
 
-// Q2. List 4 distinct ways a dangling reference or dangling pointer can arise.
-//
-//     YOUR ANSWER:
-//     TODO
+// Q2. Four ways a dangling reference/pointer can arise:
+//     1. Return a reference to a local variable (destroyed on function return).
+//     2. Store a pointer to a temporary (destroyed at end of full-expression).
+//     3. Store a pointer to an element of a std::vector that later reallocates.
+//     4. Keep a raw pointer to an object that was deleted (via unique_ptr reset or delete).
 
-// Q3. Write the declaration of a function pointer variable `fp` that can point
-//     to any function with signature `void f(double, int)`.
-//
-//     YOUR ANSWER (write the declaration here as a C++ line):
-//     TODO
+// Q3. Function pointer variable declaration for void f(double, int):
+//     void (*fp)(double, int);
 
-// Q4. What is the difference between:
-//       const ImuSample& front() const
-//       ImuSample&       front()
-//     on the same class? When does the compiler call each overload?
-//
-//     YOUR ANSWER:
-//     TODO
+// Q4. const and non-const overloads:
+//     const ImuSample& front() const  — called when the ImuWindow object is const.
+//     ImuSample&       front()        — called when the object is non-const.
+//     The compiler selects based on the const-ness of *this.
 
-// Q5. Given `int a[5] = {1,2,3,4,5}; int* p = a; p += 3;`
-//     Is `p` a valid pointer? Can you then do `p += 3` a second time and
-//     dereference? Explain why or why not using the C++ standard rules.
-//
-//     YOUR ANSWER:
-//     TODO
+// Q5. After `int a[5]; int* p = a; p += 3;`
+//     p is valid (points to a[3]). You can dereference and do p += 1 (→ a[4]).
+//     Doing `p += 3` a SECOND time would put p at a[6] — two past the end.
+//     Forming this pointer is UB (may only go ONE past the end). Dereferencing is also UB.
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PART A — Dangling reference / pointer diagnosis
-//
-// For each of the 4 cases below, identify:
-//   (1) Is there a bug?
-//   (2) If so, what exactly is the bug and why is it UB?
-//   (3) If not, explain why it is safe.
-//
-// Answer in comments — NO code changes needed.
+// PART A — Dangling reference diagnosis
 // ─────────────────────────────────────────────────────────────────────────────
 
-// A1:
-//   struct ImuSample { double t; float ax; };
-//   const ImuSample& get_gravity_sample() {
-//       ImuSample s{0.0, 9.81f};
-//       return s;
-//   }
-//   // Called as: const ImuSample& ref = get_gravity_sample();
-//
-// YOUR DIAGNOSIS:
-// TODO
+// A1: BUG — return reference to local variable s. s is destroyed when the function
+//     returns. The returned reference is dangling. Any use is UB.
 
-// A2:
-//   class ImuWindow {
-//       ImuSample data_[8];
-//       int size_;
-//   public:
-//       const float& first_ax() const { return data_[0].ax; }
-//   };
-//   // Called as: const ImuWindow w; const float& ax = w.first_ax();
-//
-// YOUR DIAGNOSIS:
-// TODO
+// A2: NOT A BUG — data_[0] is a member of the ImuWindow object w. As long as w
+//     stays alive, the reference is valid. Since w is declared in the same scope
+//     as the reference, the lifetime is fine.
 
-// A3:
-//   ImuSample* latest = nullptr;
-//   {
-//       ImuSample s{1.0, 2.0f};
-//       latest = &s;
-//   }
-//   std::cout << latest->ax;  // usage after scope
-//
-// YOUR DIAGNOSIS:
-// TODO
+// A3: BUG — latest is set to the address of s, which is a local variable.
+//     After the closing brace, s is destroyed. latest is now a dangling pointer.
+//     latest->ax is UB (may crash, may read garbage).
 
-// A4:
-//   struct ImuWindow { ImuSample data_[8]; int size_; ImuSample& back(); };
-//   const ImuSample& ref = ImuWindow{}.back();
-//   // (ImuWindow{} is a temporary; back() returns a reference to an internal member)
-//
-// YOUR DIAGNOSIS:
-// TODO
+// A4: BUG — ImuWindow{} is a temporary. back() returns a reference to an internal
+//     member of that temporary. The temporary is destroyed at the end of the
+//     full-expression (the semicolon). ref is immediately dangling.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PART B — Implement ImuWindow (fixed-capacity ring buffer)
@@ -116,52 +63,50 @@ class ImuWindow {
 public:
     static constexpr int CAPACITY = 8;
 
-    // Push one sample. When full, overwrite the oldest entry (circular).
-    // Physical write slot: data_[head_]
-    // After write: head_ = (head_ + 1) % CAPACITY
-    //              size_ = std::min(size_ + 1, CAPACITY)
-    //
-    // THINK: why is head_ advanced BEFORE capping size_? Draw the state
-    // after 9 pushes into a capacity-8 buffer on paper before coding.
-    void push_back(const ImuSample& s);
+    void push_back(const ImuSample& s) {
+        data_[head_] = s;
+        head_ = (head_ + 1) % CAPACITY;
+        if (size_ < CAPACITY) ++size_;
+    }
 
-    // Element access. Logical index 0 = oldest, size_-1 = newest.
-    // Physical index formula: (head_ - size_ + i + CAPACITY) % CAPACITY
-    //
-    // THINK: Work through this formula for head_=3, size_=3, i=0 on paper.
-    //
-    // THINK: Why do BOTH const and non-const versions need to exist?
-    //        When would a caller need the mutable (non-const) version?
-    const ImuSample& operator[](int i) const;
-    ImuSample&       operator[](int i);
+    // Logical index: 0 = oldest, size_-1 = newest.
+    // Physical index: (head_ - size_ + i + CAPACITY) % CAPACITY
+    const ImuSample& operator[](int i) const {
+        return data_[(head_ - size_ + i + CAPACITY) % CAPACITY];
+    }
 
-    // THINK: What happens if you call front() or back() on an empty window?
-    //        Is it UB? Should you add a guard? Consider both safety-critical
-    //        (defensive check) and high-performance (precondition, no check) approaches.
-    const ImuSample& front() const;  // oldest entry
-    ImuSample&       front();
-    const ImuSample& back()  const;  // newest entry
-    ImuSample&       back();
+    ImuSample& operator[](int i) {
+        // Delegate to const version via const_cast to avoid code duplication.
+        return const_cast<ImuSample&>(static_cast<const ImuWindow&>(*this)[i]);
+    }
+
+    const ImuSample& front() const { return (*this)[0]; }
+    ImuSample&       front()       { return (*this)[0]; }
+    const ImuSample& back()  const { return (*this)[size_ - 1]; }
+    ImuSample&       back()        { return (*this)[size_ - 1]; }
 
     int  size()  const { return size_; }
     bool empty() const { return size_ == 0; }
     bool full()  const { return size_ == CAPACITY; }
 
-    // Apply fn to every element in LOGICAL order (oldest to newest, 0..size_-1).
-    // fn signature: void fn(ImuSample&)
-    //
-    // THINK: This takes a plain function pointer, NOT a lambda or std::function.
-    //        Write an example regular function (see scale_ax below) and pass it.
-    void apply_all(void (*fn)(ImuSample&));
+    void apply_all(void (*fn)(ImuSample&)) {
+        for (int i = 0; i < size_; ++i) {
+            fn((*this)[i]);
+        }
+    }
 
-    // Print all CAPACITY physical slots in raw array order.
-    // Must use pointer arithmetic (NOT the subscript operator).
-    // Pattern: const ImuSample* ptr = data_;
-    //          const ImuSample* end = data_ + CAPACITY;
-    //          while (ptr != end) { /* print */ ++ptr; }
-    //
-    // THINK: Is data_ + CAPACITY a valid pointer? Can you dereference it?
-    void print_raw(std::ostream& os) const;
+    // Print all CAPACITY physical slots using pointer arithmetic.
+    void print_raw(std::ostream& os) const {
+        const ImuSample* ptr = data_;
+        const ImuSample* end = data_ + CAPACITY;
+        int idx = 0;
+        while (ptr != end) {
+            os << "  [" << idx << "] t=" << std::fixed << std::setprecision(3)
+               << ptr->timestamp_s << " ax=" << ptr->ax << "\n";
+            ++ptr;
+            ++idx;
+        }
+    }
 
 private:
     ImuSample data_[CAPACITY] = {};
@@ -169,44 +114,8 @@ private:
     int head_ = 0;  // index of NEXT write slot
 };
 
-// ── Function passed to apply_all ─────────────────────────────────────────────
-// This doubles the ax field of a sample. Passed as a plain function pointer.
 void scale_ax(ImuSample& s) {
     s.ax *= 2.0f;
-}
-
-// ── ImuWindow method implementations ─────────────────────────────────────────
-// TODO: Replace each stub body with a correct implementation.
-
-void ImuWindow::push_back(const ImuSample& s) {
-    (void)s; // TODO: write to data_[head_], advance head_, update size_
-}
-
-const ImuSample& ImuWindow::operator[](int i) const {
-    // TODO: compute physical index via (head_ - size_ + i + CAPACITY) % CAPACITY
-    (void)i;
-    return data_[0]; // stub — always returns slot 0
-}
-
-ImuSample& ImuWindow::operator[](int i) {
-    // TODO: delegate to const version via const_cast, or repeat index formula
-    (void)i;
-    return data_[0]; // stub
-}
-
-const ImuSample& ImuWindow::front() const { return (*this)[0]; }
-ImuSample&       ImuWindow::front()       { return (*this)[0]; }
-const ImuSample& ImuWindow::back()  const { return (*this)[size_ - 1]; }
-ImuSample&       ImuWindow::back()        { return (*this)[size_ - 1]; }
-
-void ImuWindow::apply_all(void (*fn)(ImuSample&)) {
-    (void)fn; // TODO: iterate logical indices 0..size_-1, call fn on each
-}
-
-void ImuWindow::print_raw(std::ostream& os) const {
-    // TODO: use pointer arithmetic — const ImuSample* ptr = data_;
-    //       const ImuSample* end = data_ + CAPACITY; while(ptr != end){...++ptr;}
-    (void)os; // stub
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

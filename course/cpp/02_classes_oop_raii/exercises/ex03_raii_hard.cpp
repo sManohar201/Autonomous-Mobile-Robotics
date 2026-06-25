@@ -100,39 +100,61 @@ static void print_state(const char* label, const RobotState& s) {
 
 // ── ANSWER Q1–Q4 here before implementing ────────────────────────────────────
 // A1 (rollback() then destructor):
-//   TODO
+//   rollback() restores state_ = saved_, then sets committed_ = true.
+//   The destructor sees committed_ == true, does nothing. State stays restored.
 //
 // A2 (commit() then destructor):
-//   TODO
+//   commit() sets committed_ = true. The destructor sees committed_ == true,
+//   does nothing. State stays as modified by the caller (changes are kept).
 //
 // A3 (exception path, neither called):
-//   TODO
+//   Stack unwinds, destructor fires with committed_ == false.
+//   Destructor restores state_ = saved_. State is reverted automatically.
 //
 // A4 (reference lifetime):
-//   TODO
+//   The guard holds a reference, not a copy, of the RobotState. The caller
+//   MUST ensure the RobotState outlives the guard. If the RobotState is destroyed
+//   while the guard is alive, the reference dangles — undefined behaviour on any
+//   access in destructor. In practice: always declare the guard in a nested scope
+//   inside the scope that owns the RobotState.
 //
 // DESIGN QUESTION — throwing from destructor during unwinding:
-//   TODO: explain the C++ rule (std::terminate) and the practical approach.
+//   C++11 §15.5.1: if a destructor throws while an exception is already
+//   propagating (stack unwinding), std::terminate() is called immediately.
+//   There is no recovery. Therefore destructors MUST NOT throw.
+//   Practical approach in safety-critical robotics: wrap the restore in
+//   try/catch(...) and log the error (or assert false), but never propagate.
+//   This preserves the original exception and avoids process termination.
 
 // ── class ScopedStateGuard ───────────────────────────────────────────────────
 
 class ScopedStateGuard {
 public:
-    // TODO: Constructor — store reference, save current state, print.
-    explicit ScopedStateGuard(RobotState& state);
+    explicit ScopedStateGuard(RobotState& state)
+        : state_(state), saved_(state), committed_(false)
+    {
+        print_state("state saved", saved_);
+    }
 
-    // TODO: Destructor — restore if !committed_.
-    //   Do NOT throw.  Swallow any exception from the assignment and log it.
-    ~ScopedStateGuard();
+    ~ScopedStateGuard() {
+        if (!committed_) {
+            try {
+                state_ = saved_;
+            } catch (...) {
+                // Must not throw from destructor during stack unwinding.
+            }
+        }
+    }
 
-    // TODO: commit() — set committed_ = true.  Idempotent.
-    void commit();
+    void commit() {
+        committed_ = true;
+    }
 
-    // TODO: rollback() — restore state immediately, set committed_ = true.
-    //   Idempotent (safe to call multiple times).
-    void rollback();
+    void rollback() {
+        state_     = saved_;
+        committed_ = true;  // prevent destructor from restoring again
+    }
 
-    // Non-copyable, non-movable.
     ScopedStateGuard(const ScopedStateGuard&)            = delete;
     ScopedStateGuard& operator=(const ScopedStateGuard&) = delete;
     ScopedStateGuard(ScopedStateGuard&&)                 = delete;
@@ -148,11 +170,16 @@ private:
 
 class ScopedPlanningTimer {
 public:
-    // TODO: Constructor — record start time, store label.
-    explicit ScopedPlanningTimer(const std::string& label);
+    explicit ScopedPlanningTimer(const std::string& label)
+        : label_(label), start_(std::chrono::steady_clock::now())
+    {}
 
-    // TODO: Destructor — compute and print elapsed ms.
-    ~ScopedPlanningTimer();
+    ~ScopedPlanningTimer() {
+        auto end = std::chrono::steady_clock::now();
+        auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       end - start_).count();
+        std::cout << "[timer] " << label_ << " took " << ms << " ms\n";
+    }
 
     ScopedPlanningTimer(const ScopedPlanningTimer&)            = delete;
     ScopedPlanningTimer& operator=(const ScopedPlanningTimer&) = delete;

@@ -1,9 +1,5 @@
 // Exercise 01 — Constructors, Destructors & Member Initializer Lists
 //
-// TASK:
-//   Implement the Sensor class below according to the specifications.
-//   Do not change any function signatures or the main() function.
-//
 // EXPECTED OUTPUT:
 //   Sensor created: lidar (id=1)
 //   Sensor created: imu (id=2)
@@ -22,39 +18,37 @@
 
 class Sensor {
 public:
-    // TODO 1: Declare a static int member to count active Sensor instances.
-    //         It must be declared here and defined (initialised to 0) below
-    //         the class definition.
+    static int instance_count_;
 
-    // TODO 2: Parameterised constructor — takes (int id, std::string name).
-    //         Use a member initializer list.
-    //         Print "Sensor created: <name> (id=<id>)\n".
-    //         Increment the instance counter.
+    Sensor(int id, std::string name) : id_(id), name_(std::move(name)) {
+        ++instance_count_;
+        std::cout << "Sensor created: " << name_ << " (id=" << id_ << ")\n";
+    }
 
-    // TODO 3: Destructor.
-    //         Print "Sensor destroyed: <name> (id=<id>)\n".
-    //         Decrement the instance counter.
+    ~Sensor() {
+        std::cout << "Sensor destroyed: " << name_ << " (id=" << id_ << ")\n";
+        --instance_count_;
+    }
 
-    // TODO 4: Make the constructor below explicit so the compiler rejects:
-    //             Sensor s = 42;
-    //         It takes a single int id, name defaults to "unknown".
-    //   Sensor(int id);
+    explicit Sensor(int id) : Sensor(id, "unknown") {}
 
-    // TODO 5: Delegating constructor.
-    //         Sensor(std::string name) should delegate to Sensor(0, name).
+    Sensor(std::string name) : Sensor(0, std::move(name)) {}
 
-    // TODO 6: Copy constructor.
-    //         Prefix the copied name with "copy of: ".
-    //         Increment the counter and print the creation message.
+    Sensor(const Sensor& other)
+        : id_(other.id_), name_("copy of: " + other.name_)
+    {
+        ++instance_count_;
+        std::cout << "Sensor created: " << name_ << " (id=" << id_ << ")\n";
+    }
 
-    static int active_count();   // returns the current instance count
+    static int active_count() { return instance_count_; }
 
 private:
     int         id_;
     std::string name_;
 };
 
-// TODO: define the static member here (one line, outside the class)
+int Sensor::instance_count_ = 0;
 
 
 int main() {
@@ -64,12 +58,12 @@ int main() {
 
         {
             Sensor s3(3, "camera");
-            Sensor s4 = s3;   // copy constructor
+            Sensor s4 = s3;
             std::cout << "Active sensors: " << Sensor::active_count() << "\n";
-        } // s3 and s4 destroyed here
+        }
 
         std::cout << "Active sensors: " << Sensor::active_count() << "\n";
-    } // s1 and s2 destroyed here
+    }
 
     std::cout << "Active sensors: " << Sensor::active_count() << "\n";
     return 0;

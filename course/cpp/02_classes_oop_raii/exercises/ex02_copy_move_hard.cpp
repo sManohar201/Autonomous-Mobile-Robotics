@@ -118,51 +118,111 @@ struct Scan {
 
 class ScanBuffer {
 public:
-    // TODO: Constructor — allocate data_, zero-initialise all Scan slots.
-    explicit ScanBuffer(int capacity);
+    explicit ScanBuffer(int capacity)
+        : data_(new Scan[capacity]), capacity_(capacity), size_(0), head_(0)
+    {
+        for (int i = 0; i < capacity_; ++i) {
+            data_[i].ranges   = nullptr;
+            data_[i].n_ranges = 0;
+        }
+    }
 
-    // TODO: Destructor — free each Scan.ranges, then free data_.
-    ~ScanBuffer();
+    ~ScanBuffer() {
+        free_all_scans();
+        delete[] data_;
+    }
 
-    // TODO: Copy constructor — deep copy (two-level allocation).
-    ScanBuffer(const ScanBuffer& other);
+    ScanBuffer(const ScanBuffer& other)
+        : data_(new Scan[other.capacity_]),
+          capacity_(other.capacity_), size_(other.size_), head_(other.head_)
+    {
+        for (int i = 0; i < capacity_; ++i) {
+            if (other.data_[i].ranges != nullptr) {
+                data_[i].n_ranges = other.data_[i].n_ranges;
+                data_[i].ranges   = new float[data_[i].n_ranges];
+                std::memcpy(data_[i].ranges, other.data_[i].ranges,
+                            data_[i].n_ranges * sizeof(float));
+            } else {
+                data_[i].ranges   = nullptr;
+                data_[i].n_ranges = 0;
+            }
+        }
+    }
 
-    // TODO: Copy assignment — self-assignment guard, free old, deep copy.
-    //   Handles differing capacities.
-    ScanBuffer& operator=(const ScanBuffer& other);
+    ScanBuffer& operator=(const ScanBuffer& other) {
+        if (this == &other) return *this;
+        free_all_scans();
+        delete[] data_;
 
-    // TODO: Move constructor (noexcept) — steal all fields, null out source.
-    ScanBuffer(ScanBuffer&& other) noexcept;
+        capacity_ = other.capacity_;
+        size_     = other.size_;
+        head_     = other.head_;
+        data_     = new Scan[capacity_];
 
-    // TODO: Move assignment (noexcept) — free own resources, then steal.
-    ScanBuffer& operator=(ScanBuffer&& other) noexcept;
+        for (int i = 0; i < capacity_; ++i) {
+            if (other.data_[i].ranges != nullptr) {
+                data_[i].n_ranges = other.data_[i].n_ranges;
+                data_[i].ranges   = new float[data_[i].n_ranges];
+                std::memcpy(data_[i].ranges, other.data_[i].ranges,
+                            data_[i].n_ranges * sizeof(float));
+            } else {
+                data_[i].ranges   = nullptr;
+                data_[i].n_ranges = 0;
+            }
+        }
+        return *this;
+    }
 
-    // TODO: push — overwrite oldest if full (free its ranges first).
-    //   No-op if capacity_ == 0.
-    void push(const float* ranges, int n);
+    ScanBuffer(ScanBuffer&& other) noexcept
+        : data_(other.data_), capacity_(other.capacity_),
+          size_(other.size_), head_(other.head_)
+    {
+        other.data_     = nullptr;
+        other.capacity_ = 0;
+        other.size_     = 0;
+        other.head_     = 0;
+    }
 
-    // TODO: get — logical index 0=oldest.
-    //   Throw std::out_of_range if i is out of bounds.
-    //   Physical index formula: (head_ - size_ + i + capacity_) % capacity_
-    //   Walk through this formula on paper with a worked example before coding:
-    //     capacity=4, size=3, head=1 (we wrote slots 0,1,2 then advanced to 1)
-    //     Wait — think again.  After 3 pushes starting at head=0:
-    //       push 0 → write slot 0, head becomes 1
-    //       push 1 → write slot 1, head becomes 2
-    //       push 2 → write slot 2, head becomes 3
-    //     Now head=3, size=3.
-    //     get(0) = oldest = slot 0.  Formula: (3 - 3 + 0 + 4) % 4 = 4%4 = 0. ✓
-    //     get(2) = newest = slot 2.  Formula: (3 - 3 + 2 + 4) % 4 = 6%4 = 2. ✓
-    //   Now add a 4th push on a capacity-4 buffer (no overwrite yet, buffer full):
-    //     push 3 → write slot 3, head becomes 0, size=4.
-    //     get(0) = oldest = slot 0.  (0 - 4 + 0 + 4) % 4 = 0. ✓
-    //   Now push a 5th (overwrite oldest, slot 0):
-    //     free slot 0's ranges, write new data there, head becomes 1, size stays 4.
-    //     get(0) = new oldest = slot 1.  (1 - 4 + 0 + 4) % 4 = 1. ✓
-    const Scan& get(int i) const;
+    ScanBuffer& operator=(ScanBuffer&& other) noexcept {
+        if (this == &other) return *this;
+        free_all_scans();
+        delete[] data_;
 
-    int size() const;
-    int capacity() const;
+        data_     = other.data_;
+        capacity_ = other.capacity_;
+        size_     = other.size_;
+        head_     = other.head_;
+
+        other.data_     = nullptr;
+        other.capacity_ = 0;
+        other.size_     = 0;
+        other.head_     = 0;
+        return *this;
+    }
+
+    void push(const float* ranges, int n) {
+        if (capacity_ == 0) return;
+
+        // Free the slot we are about to overwrite (only relevant when full).
+        delete[] data_[head_].ranges;
+
+        data_[head_].ranges   = new float[n];
+        data_[head_].n_ranges = n;
+        std::memcpy(data_[head_].ranges, ranges, n * sizeof(float));
+
+        head_ = (head_ + 1) % capacity_;
+        if (size_ < capacity_) ++size_;
+    }
+
+    const Scan& get(int i) const {
+        if (i < 0 || i >= size_)
+            throw std::out_of_range("ScanBuffer::get: index out of range");
+        int phys = (head_ - size_ + i + capacity_) % capacity_;
+        return data_[phys];
+    }
+
+    int size()     const { return size_; }
+    int capacity() const { return capacity_; }
 
 private:
     Scan* data_;
@@ -170,9 +230,13 @@ private:
     int   size_;
     int   head_;
 
-    // TODO (optional): private helper void free_all_scans()
-    //   Frees each ranges array and nulls the pointer.  Reuse in destructor
-    //   and copy assignment to avoid code duplication.
+    void free_all_scans() {
+        for (int i = 0; i < capacity_; ++i) {
+            delete[] data_[i].ranges;
+            data_[i].ranges   = nullptr;
+            data_[i].n_ranges = 0;
+        }
+    }
 };
 
 

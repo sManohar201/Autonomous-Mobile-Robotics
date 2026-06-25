@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.16)
+project(executors_concurrency_lab)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+add_executable(snapshot_processor src/snapshot_processor.cpp)
+add_executable(concurrent_pipeline_hard src/concurrent_pipeline_hard.cpp)
+ament_target_dependencies(snapshot_processor rclcpp std_msgs)
+ament_target_dependencies(concurrent_pipeline_hard rclcpp std_msgs)
+install(TARGETS snapshot_processor concurrent_pipeline_hard DESTINATION lib/${PROJECT_NAME})
+ament_package()
+

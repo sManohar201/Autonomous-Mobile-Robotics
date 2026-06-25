@@ -1,10 +1,5 @@
 // Exercise 02 — Copy & Move Semantics (Rule of Five)
 //
-// TASK:
-//   PointCloud manages a heap-allocated array of floats (x,y,z triples).
-//   Implement all five special members so it is safe to copy and move.
-//   Do not change the class layout or main().
-//
 // EXPECTED OUTPUT:
 //   created PointCloud(3 points)
 //   created PointCloud(3 points)
@@ -24,36 +19,54 @@
 
 class PointCloud {
 public:
-    // Each point is 3 floats stored flat: [x0,y0,z0, x1,y1,z1, ...]
     float* data;
     int    n_points;
 
-    // TODO 1: Parameterised constructor.
-    //         Allocates n * 3 floats on the heap, copies src into data.
-    //         Prints "created PointCloud(<n> points)\n".
-    PointCloud(int n, const float* src);
+    PointCloud(int n, const float* src) : n_points(n) {
+        data = new float[n * 3];
+        std::memcpy(data, src, n * 3 * sizeof(float));
+        std::cout << "created PointCloud(" << n << " points)\n";
+    }
 
-    // TODO 2: Destructor — release heap memory.
-    //         Prints "destroyed PointCloud\n".
-    ~PointCloud();
+    ~PointCloud() {
+        delete[] data;
+        std::cout << "destroyed PointCloud\n";
+    }
 
-    // TODO 3: Copy constructor — deep copy.
-    //         Prints "copied PointCloud(<n> points)\n".
-    PointCloud(const PointCloud& other);
+    PointCloud(const PointCloud& other) : n_points(other.n_points) {
+        data = new float[n_points * 3];
+        std::memcpy(data, other.data, n_points * 3 * sizeof(float));
+        std::cout << "copied PointCloud(" << n_points << " points)\n";
+    }
 
-    // TODO 4: Copy assignment — handle self-assignment, then deep copy.
-    //         Prints "copy-assigned <n> points\n".
-    PointCloud& operator=(const PointCloud& other);
+    PointCloud& operator=(const PointCloud& other) {
+        if (this == &other) return *this;
+        delete[] data;
+        n_points = other.n_points;
+        data = new float[n_points * 3];
+        std::memcpy(data, other.data, n_points * 3 * sizeof(float));
+        std::cout << "copy-assigned " << n_points << " points\n";
+        return *this;
+    }
 
-    // TODO 5: Move constructor — steal data pointer, leave other empty.
-    //         Prints "moved PointCloud(<n> points)\n".
-    //         Mark noexcept.
-    PointCloud(PointCloud&& other) noexcept;
+    PointCloud(PointCloud&& other) noexcept
+        : data(other.data), n_points(other.n_points)
+    {
+        other.data = nullptr;
+        other.n_points = 0;
+        std::cout << "moved PointCloud(" << n_points << " points)\n";
+    }
 
-    // TODO 6: Move assignment — release own data, steal other's.
-    //         Handle self-assignment. Mark noexcept.
-    //         Prints "move-assigned <n> points\n".
-    PointCloud& operator=(PointCloud&& other) noexcept;
+    PointCloud& operator=(PointCloud&& other) noexcept {
+        if (this == &other) return *this;
+        delete[] data;
+        data = other.data;
+        n_points = other.n_points;
+        other.data = nullptr;
+        other.n_points = 0;
+        std::cout << "move-assigned " << n_points << " points\n";
+        return *this;
+    }
 };
 
 int main() {
@@ -62,9 +75,9 @@ int main() {
     PointCloud a(3, pts);
     PointCloud b(3, pts);
 
-    b = a;                        // copy assignment
-    PointCloud c(std::move(a));   // move constructor  (a is now empty)
-    b = std::move(c);             // move assignment   (c is now empty)
+    b = a;
+    PointCloud c(std::move(a));
+    b = std::move(c);
 
     std::cout << "first point of b: ("
               << b.data[0] << ", " << b.data[1] << ", " << b.data[2] << ")\n";

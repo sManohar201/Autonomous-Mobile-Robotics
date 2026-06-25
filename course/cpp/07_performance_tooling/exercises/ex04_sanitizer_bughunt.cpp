@@ -1,13 +1,17 @@
+#include <cassert>
 #include <iostream>
 #include <vector>
 
-// TODO: fix the out-of-bounds bug below, then run with AddressSanitizer.
+// Exercise: the loop below has an out-of-bounds bug.
+// Fix it and implement safe_sum(values) that returns the correct sum.
+//
+// Buggy code (do NOT copy — just observe the off-by-one):
+//   for (std::size_t i = 0; i <= values.size(); ++i)  // <= reads one past end
+//       sum += values[i];
+//
+// Compile with -fsanitize=address to catch this class of bug automatically.
 
 int main() {
-    std::vector<int> values{1, 2, 3};
-    // for (std::size_t i = 0; i <= values.size(); ++i) {
-    //     std::cout << values[i] << "\n";
-    // }
+    // TODO
     std::cout << "ex04_sanitizer_bughunt passed\n";
 }
-

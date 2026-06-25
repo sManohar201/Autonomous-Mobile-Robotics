@@ -1,70 +1,42 @@
 // Exercise 04 (Hard) — Argument-Dependent Lookup, Overload Resolution Ranking,
 //                      Inline Namespaces, and Name Hiding
 // ─────────────────────────────────────────────────────────────────────────────
-//
-// CONTEXT:
-//   Eigen — the foundational linear algebra library used by every robotics
-//   stack (ROS2, MoveIt, nav2) — relies entirely on ADL for its operators.
-//   Engineers who don't understand ADL struggle to write geometry types that
-//   interoperate cleanly with std::cout and standard algorithms. Overload
-//   resolution traps are a leading cause of "wrong function called" bugs in
-//   production robotics code.
-//
-// ─────────────────────────────────────────────────────────────────────────────
-// PRE-CODING RESEARCH QUESTIONS — Answer in the spaces provided.
-// ─────────────────────────────────────────────────────────────────────────────
 
-// Q1. What is Argument-Dependent Lookup (ADL)?
-//     When you call `f(x)` without namespace qualification, which namespaces
-//     does the compiler search in addition to the current scope?
-//
-//     YOUR ANSWER:
-//     TODO
+// Q1. ADL: When you call f(x) without namespace qualification, the compiler
+//     searches the namespaces associated with each argument's type, in addition
+//     to the enclosing scopes. For a type T in namespace N, N is added to the
+//     set of associated namespaces searched.
 
-// Q2. Why does `std::cout << my_vec` work WITHOUT `using namespace my_ns;`
-//     if `operator<<` is defined in the same namespace as `my_vec`'s type?
-//
-//     YOUR ANSWER:
-//     TODO
+// Q2. `std::cout << my_vec` works without `using namespace my_ns` because ADL
+//     sees that my_vec's type belongs to my_ns, so it searches my_ns for
+//     operator<<. It finds it there and calls it — no explicit using needed.
 
-// Q3. Overload resolution ranking (best-to-worst). Fill in the blanks:
-//     Rank 1 (best): exact match
-//     Rank 2: ___________
-//     Rank 3: ___________
-//     Rank 4: ___________
+// Q3. Overload resolution ranking:
+//     Rank 1 (best): exact match / identity conversion
+//     Rank 2: lvalue-to-rvalue / qualification (const) conversion
+//     Rank 3: promotion (int→long, float→double, bool→int)
+//     Rank 4: standard conversion (int→double, double→int)
 //     Rank 5 (worst): user-defined conversion
-//
-//     YOUR ANSWER:
-//     TODO
 
 // Q4. `void f(float); void f(double); f(3);`
-//     Which overload is called? Why?
-//     What changes if you add `void f(int);`?
-//
-//     YOUR ANSWER:
-//     TODO
+//     3 is int. int→float is a promotion (rank 3), int→double is a promotion (rank 3).
+//     Both are rank 3 → AMBIGUOUS. Adding void f(int) makes rank 1 exact match → f(int) called.
 
-// Q5. What does `inline namespace` do that a regular nested namespace does not?
-//     Give a real-world use case (API versioning in a robotics library).
-//
-//     YOUR ANSWER:
-//     TODO
+// Q5. inline namespace:
+//     Members of an inline namespace are treated as if they were in the enclosing namespace.
+//     Without inline: nav_cost::CostMap is ambiguous — it could be v1 or v2.
+//     With inline namespace v2: nav_cost::CostMap resolves to v2::CostMap automatically.
+//     Use case: ship v2 as the default; existing user code that writes nav_cost::CostMap
+//     gets v2 without changes. v1 users can still write nav_cost::v1::CostMap.
 
-// Q6. Name hiding:
-//     namespace A { void foo(int); void foo(double); }
-//     namespace B { using namespace A; void foo(int); }
-//     What does `B::foo(3.14)` call? Is this overloading or hiding?
-//     Explain the difference between `using namespace A` and `using A::foo`.
-//
-//     YOUR ANSWER:
-//     TODO
+// Q6. B::foo(3.14) calls B::foo(int) — name hiding, NOT overloading.
+//     When a name is declared in B, it HIDES all overloads of that name from
+//     `using namespace A`, even overloads with different signatures.
+//     `using namespace A` → names imported but hidden by B::foo declaration.
+//     `using A::foo` (declaration, not directive) would ADD A::foo to B's overload set.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PART A — Overload resolution prediction
-//
-// For each call below, predict which overload is called (or write AMBIGUOUS/
-// ERROR). Write your reasoning as a comment on the PREDICT line, then
-// uncomment the call. Leave ambiguous calls commented out with explanation.
 // ─────────────────────────────────────────────────────────────────────────────
 
 #include <iostream>
@@ -74,61 +46,52 @@
 
 namespace overload_demo {
 
-void encode(int x)    { std::cout << "encode(int): "    << x           << "\n"; } // E1
-void encode(double x) { std::cout << "encode(double): " << std::fixed << std::setprecision(5) << x << "\n"; } // E2
+void encode(int x)    { std::cout << "encode(int): "    << x           << "\n"; }
+void encode(double x) { std::cout << "encode(double): " << std::fixed << std::setprecision(5) << x << "\n"; }
 
-void log_val(float  v) { std::cout << "log_val(float): "  << v << "\n"; } // L1
-void log_val(double v) { std::cout << "log_val(double): " << v << "\n"; } // L2
+void log_val(float  v) { std::cout << "log_val(float): "  << v << "\n"; }
+void log_val(double v) { std::cout << "log_val(double): " << v << "\n"; }
 
 } // namespace overload_demo
 
 void part_a() {
     using namespace overload_demo;
 
-    // PREDICT: TODO — encode(42) calls which overload and why?
+    // PREDICT: encode(int): 42 — exact match to encode(int)
     encode(42);
 
-    // PREDICT: TODO — encode(42.0) calls which?
+    // PREDICT: encode(double): 42.00000 — exact match to encode(double)
     encode(42.0);
 
-    // PREDICT: TODO — encode(42.0f)?
-    //   (float → double is a promotion, outranking standard conversion to int)
+    // PREDICT: encode(double): 42.00000
+    //   float → double is a promotion (rank 3), float → int is a standard conversion (rank 4).
+    //   Promotion wins → encode(double) called.
     encode(42.0f);
 
-    // PREDICT: TODO — encode(true)?
-    //   (bool → int is an integral promotion)
+    // PREDICT: encode(int): 1 — bool → int is an integral promotion (rank 3), exact.
     encode(true);
 
-    // encode(42L) — long argument, two overloads:
-    //   E1: long → int  is an integral conversion (rank 3)
-    //   E2: long → double is a floating-integral conversion (rank 3)
-    //   Both are the same rank → AMBIGUOUS.
-    // PREDICT: AMBIGUOUS — leave commented out, explain below:
-    //
-    // TODO: YOUR EXPLANATION of why encode(42L) is ambiguous
-    // encode(42L);  // AMBIGUOUS: long→int and long→double are both standard conversions
+    // encode(42L) is AMBIGUOUS:
+    //   long → int: standard conversion (rank 4)
+    //   long → double: standard conversion (rank 4)
+    //   Both same rank → AMBIGUOUS. Compiler error if uncommented.
+    // encode(42L);
 
-    // PREDICT: TODO — log_val(3.14f)?
+    // PREDICT: log_val(float): 3.14000 — exact match to log_val(float)
     log_val(3.14f);
 
-    // PREDICT: TODO — log_val(3.14)?
+    // PREDICT: log_val(double): 3.14000 — exact match to log_val(double)
     log_val(3.14);
 
-    // log_val(3) — int argument:
-    //   L1: int → float  is a standard conversion (rank 3)
-    //   L2: int → double is a standard conversion (rank 3)
-    //   AMBIGUOUS.
-    // PREDICT: AMBIGUOUS — leave commented out:
-    //
-    // TODO: YOUR EXPLANATION
-    // log_val(3);  // AMBIGUOUS
+    // log_val(3) is AMBIGUOUS:
+    //   int → float: standard conversion (rank 4)
+    //   int → double: standard conversion (rank 4)
+    //   Both same rank → AMBIGUOUS.
+    // log_val(3);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PART B — ADL demonstration with Pose3d
-//
-// Implement operator<< and operator== in the geometry namespace.
-// Show in main that they work via ADL without any `using` declaration.
 // ─────────────────────────────────────────────────────────────────────────────
 
 namespace geometry {
@@ -138,35 +101,30 @@ struct Pose3d {
     double roll, pitch, yaw;
 };
 
-// TODO: implement operator<< in the geometry namespace so ADL finds it.
-// Remove this stub and replace with your implementation.
+// operator<< in geometry:: — ADL finds it when printing a Pose3d.
 std::ostream& operator<<(std::ostream& os, const Pose3d& p) {
-    (void)p;
-    os << "[stub — implement me]";
+    os << "x=" << p.x << " y=" << p.y << " z=" << p.z
+       << " roll=" << p.roll << " pitch=" << p.pitch << " yaw=" << p.yaw;
     return os;
 }
 
-// TODO: implement operator== in the geometry namespace.
-// Remove this stub and replace with your implementation.
+// operator== in geometry:: — ADL finds it for (p1 == p2).
 bool operator==(const Pose3d& a, const Pose3d& b) {
-    (void)a; (void)b;
-    return false; // stub
+    return a.x == b.x && a.y == b.y && a.z == b.z &&
+           a.roll == b.roll && a.pitch == b.pitch && a.yaw == b.yaw;
 }
 
 } // namespace geometry
 
-// THINK: If you defined operator<< in the GLOBAL namespace instead of
-//        geometry::, would ADL still find it for `std::cout << pose`?
-//        Why or why not? Answer in a comment below:
-//
-// TODO: YOUR ANSWER
+// If operator<< were in the GLOBAL namespace, ADL would NOT find it for
+// `std::cout << pose`. ADL only searches associated namespaces of the arguments'
+// types. Pose3d is in geometry::, so only geometry:: (and its enclosing
+// namespaces, up to global) are searched. A global-namespace operator<< would
+// be found only via regular unqualified lookup, not ADL. In practice it would
+// be found, but relying on global-namespace operators is fragile.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PART C — Inline namespace for API versioning
-//
-// Build a versioned nav_cost library.
-// Show that nav_cost::CostMap resolves to v2 and nav_cost::v1::CostMap
-// still works.
 // ─────────────────────────────────────────────────────────────────────────────
 
 namespace nav_cost {
@@ -177,41 +135,29 @@ namespace nav_cost {
             double resolution;
         };
 
-        // TODO: implement — simple formula: return (x + y) * resolution
         double compute_cost(const CostMap& m, int x, int y);
     }
 
-    // This namespace should be `inline namespace v2` — the `inline` keyword is
-    // the key task for Part C. It is already set here; understand WHY it must
-    // be inline and what changes if you remove the `inline` keyword.
     inline namespace v2 {
         struct CostMap {
             int    width, height;
             double resolution;
-            double* data;  // pointer to flattened cost grid (may be nullptr)
+            double* data;
         };
 
-        // TODO: implement — if data is not null: return data[y * m.width + x]
-        //                   else: return (x + y) * resolution
         double compute_cost(const CostMap& m, int x, int y);
-
-        // TODO: implement — add clearance_m penalty: cost + clearance_m
         double compute_cost(const CostMap& m, int x, int y, double clearance_m);
     }
 
 } // namespace nav_cost
 
-// THINK: What happens to existing user code (that calls nav_cost::compute_cost)
-//        when the library ships v3 as the new inline namespace?
-//        Answer in a comment below:
-//
-// TODO: YOUR ANSWER
+// When v3 ships as the new inline namespace, existing user code calling
+// nav_cost::CostMap and nav_cost::compute_cost gets v3 automatically.
+// Users who need v2 explicitly write nav_cost::v2::CostMap.
+// This allows ABI-compatible evolution without forcing users to update call sites.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PART D — Name hiding trap
-//
-// Demonstrate that robot::configure(3.14) does NOT call utils::configure(double)
-// even though utils::configure is brought in via `using namespace utils`.
 // ─────────────────────────────────────────────────────────────────────────────
 
 namespace utils {
@@ -227,40 +173,35 @@ namespace utils {
 }
 
 namespace robot {
-    using namespace utils;  // brings in all three utils::configure overloads
+    using namespace utils;
 
-    // Declaring configure(int) in robot:: HIDES all utils::configure overloads,
-    // not just the (int) one. This is NAME HIDING, not overloading.
+    // robot::configure(int) HIDES all utils::configure overloads — not just (int).
+    // 3.14 (double) does not find utils::configure(double); it converts to int.
     void configure(int timeout_ms) {
         std::cout << "robot::configure(int): " << timeout_ms << "\n";
     }
 }
 
-// THINK: Is robot::configure(3.14) overloading or hiding? Explain.
-//        How would you fix this so robot::configure(double) falls through
-//        to utils::configure(double)?
-//        Answer in a comment below:
-//
-// TODO: YOUR ANSWER
+// robot::configure(3.14) is NAME HIDING: robot::configure(int) hides ALL
+// utils:: overloads that were brought in by `using namespace utils`.
+// FIX: add `using utils::configure;` inside robot:: to inject the overload set
+// alongside robot::configure(int), converting hiding → overloading.
 
 // ─────────────────────────────────────────────────────────────────────────────
-// nav_cost implementations (add bodies here or above in the namespace)
+// nav_cost implementations
 // ─────────────────────────────────────────────────────────────────────────────
 
-// TODO: implement nav_cost::v1::compute_cost
 double nav_cost::v1::compute_cost(const nav_cost::v1::CostMap& m, int x, int y) {
-    (void)m; (void)x; (void)y;
-    return 0.0; // stub
+    return (x + y) * m.resolution;
 }
 
-// TODO: implement nav_cost::v2::compute_cost (two overloads)
 double nav_cost::v2::compute_cost(const nav_cost::v2::CostMap& m, int x, int y) {
-    (void)m; (void)x; (void)y;
-    return 0.0; // stub
+    if (m.data) return m.data[y * m.width + x];
+    return (x + y) * m.resolution;
 }
+
 double nav_cost::v2::compute_cost(const nav_cost::v2::CostMap& m, int x, int y, double clearance_m) {
-    (void)m; (void)x; (void)y; (void)clearance_m;
-    return 0.0; // stub
+    return nav_cost::v2::compute_cost(m, x, y) + clearance_m;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -295,14 +236,12 @@ int main() {
     geometry::Pose3d p1{1.0, 2.0, 0.0, 0.0, 0.0, 3.14159265358979 / 4.0};
     geometry::Pose3d p2{1.0, 2.0, 0.0, 0.0, 0.0, 0.0};
 
-    // These must work via ADL — no `using namespace geometry` allowed here
     std::cout << "Pose3d via ADL: " << p1 << "\n";
     std::cout << "p1 == p2: " << (p1 == p2) << "\n";
     std::cout << "\n";
 
     // Part C — inline namespace
-    // nav_cost::CostMap should resolve to v2 (because v2 is inline)
-    nav_cost::CostMap m2{};  // TODO: make v2 the inline namespace so this works
+    nav_cost::CostMap m2{};
     m2.width  = 10;
     m2.height = 10;
     m2.resolution = 0.1;
@@ -319,11 +258,7 @@ int main() {
 
     // Part D — name hiding
     std::cout << "robot::configure(int) called — utils::configure(double) was hidden:\n";
-    robot::configure(3);   // calls robot::configure(int) — fine
-    // robot::configure(3.14); // This would call robot::configure(int) NOT utils::configure(double)
-    //                         // because robot::configure(int) HIDES all utils:: overloads.
-    //                         // 3.14 (double) converts to int → robot::configure(int).
-    //                         // Uncomment to observe.
+    robot::configure(3);
 
     return 0;
 }

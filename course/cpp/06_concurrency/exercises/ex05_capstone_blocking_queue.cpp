@@ -1,18 +1,23 @@
+#include <cassert>
 #include <condition_variable>
+#include <cstddef>
 #include <deque>
 #include <iostream>
 #include <mutex>
 #include <optional>
+#include <thread>
 
-// TODO: implement BoundedBlockingQueue<T>:
-//   - constructor(capacity)
-//   - push(T) returns false if closed
-//   - pop() returns optional<T>; nullopt means closed and empty
-//   - close()
-//   - size()
-// If full, push should block until space exists or closed.
+// Exercise: implement BoundedBlockingQueue<T> with capacity limiting.
+//
+// push(T)  — blocks when full; returns false immediately if closed
+// pop()    — blocks when empty; returns nullopt when closed and drained
+// close()  — wakes all blocked callers on both push and pop sides
+// size()   — returns current element count
+//
+// Use two condition variables (not_empty_ and not_full_) to avoid
+// waking the wrong side unnecessarily.
 
 int main() {
+    // TODO
     std::cout << "ex05_capstone_blocking_queue passed\n";
 }
-

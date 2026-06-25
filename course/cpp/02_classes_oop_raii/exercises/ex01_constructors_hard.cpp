@@ -105,63 +105,76 @@
 
 // ── YOUR ANSWERS (fill in before coding) ────────────────────────────────────
 // A1 (why rho=±1 breaks PD):
-//   TODO: answer here
+//   When rho=±1, det = var_x*var_y - (±1)^2 * var_x * var_y = var_x*var_y*(1-1) = 0.
+//   The determinant equals zero, so the matrix is positive-semidefinite (singular),
+//   not positive-definite. A singular covariance means one direction has zero
+//   variance — the filter is claiming perfect knowledge along that axis.
 //
 // A2 (var_x=4, var_y=9, cov_xy=6, is it PD?):
-//   TODO: compute det = var_x*var_y - cov_xy^2 = ... answer here
+//   det = 4*9 - 6^2 = 36 - 36 = 0. Not PD — it is only positive-semidefinite.
+//   This corresponds to rho = 6/sqrt(36) = 1 — perfect correlation.
 //
 // A3 (perfect observation, rho→1):
-//   TODO: answer here
+//   As rho→1, the covariance matrix becomes singular (det→0). The measurement
+//   update collapses the uncertainty in one direction to zero. The Kalman gain
+//   becomes undefined (0/0 form) and the filter breaks numerically. In practice
+//   you never achieve perfect linear correlation between state components; the
+//   degeneracy signals a modelling error.
 
 // ── class Covariance2d ───────────────────────────────────────────────────────
 
 class Covariance2d {
 public:
-    // TODO: declare static int instance_count_
-    //   (definition goes outside the class — see below)
+    static int instance_count_;
 
-    // TODO: PRIMARY constructor Covariance2d(double var_x, double var_y, double cov_xy)
-    //   Step 1 — validate var_x > 0, throw std::invalid_argument("var_x must be positive") if not.
-    //   Step 2 — validate var_x*var_y - cov_xy*cov_xy > 0,
-    //             throw std::invalid_argument("matrix is not positive-definite") if not.
-    //   Step 3 — store and increment counter.
-    //   TRICKY: do NOT store before validating; a half-constructed object that
-    //           increments the counter before throwing leaves a stale count.
-    //           Increment ONLY after all checks pass.
+    Covariance2d(double var_x, double var_y, double cov_xy)
+        : var_x_(0.0), var_y_(0.0), cov_xy_(0.0)
+    {
+        if (var_x <= 0.0)
+            throw std::invalid_argument("var_x must be positive");
+        if (var_x * var_y - cov_xy * cov_xy <= 0.0)
+            throw std::invalid_argument("matrix is not positive-definite");
+        var_x_  = var_x;
+        var_y_  = var_y;
+        cov_xy_ = cov_xy;
+        ++instance_count_;
+    }
 
-    // TODO: explicit single-arg constructor Covariance2d(double var)
-    //   Must delegate to the primary constructor: Covariance2d(var, var, 0.0)
-    //   The `explicit` keyword prevents implicit conversions like:
-    //     void f(Covariance2d); f(3.0);  // should be a compile error
+    explicit Covariance2d(double var)
+        : Covariance2d(var, var, 0.0)
+    {}
 
-    // TODO: Destructor — decrement instance_count_
+    ~Covariance2d() { --instance_count_; }
 
-    // TODO: static factory identity()
-    //   Returns Covariance2d(1.0, 1.0, 0.0)
+    static Covariance2d identity() {
+        return Covariance2d(1.0, 1.0, 0.0);
+    }
 
-    // TODO: static factory from_std_devs(double sx, double sy, double rho)
-    //   Validate rho in (-1, 1) exclusive FIRST.
-    //   Then return Covariance2d(sx*sx, sy*sy, rho*sx*sy).
-    //   THINK: after substitution, the PD condition becomes:
-    //     sx^2 * sy^2 - (rho*sx*sy)^2 = sx^2*sy^2*(1 - rho^2)
-    //   This is > 0 iff |rho| < 1 and sx,sy > 0.  So the rho check here
-    //   makes the PD check in the primary constructor redundant — but both
-    //   should still fire to protect against callers bypassing from_std_devs.
+    static Covariance2d from_std_devs(double sx, double sy, double rho) {
+        if (rho <= -1.0 || rho >= 1.0)
+            throw std::invalid_argument("correlation must be in (-1, 1)");
+        return Covariance2d(sx * sx, sy * sy, rho * sx * sy);
+    }
 
-    // TODO: accessors var_x(), var_y(), cov_xy() — return the private members
+    double var_x()  const { return var_x_; }
+    double var_y()  const { return var_y_; }
+    double cov_xy() const { return cov_xy_; }
 
-    // TODO: double correlation() const
-    //   cov_xy_ / std::sqrt(var_x_ * var_y_)
-    //   Guaranteed to be in (-1,1) for any valid Covariance2d object.
+    double correlation() const {
+        return cov_xy_ / std::sqrt(var_x_ * var_y_);
+    }
 
-    // TODO: bool is_positive_definite() const
-    //   Re-check the two SPD conditions.  A valid live object always passes,
-    //   but this is useful for external callers who hold raw values.
+    bool is_positive_definite() const {
+        return var_x_ > 0.0 && (var_x_ * var_y_ - cov_xy_ * cov_xy_) > 0.0;
+    }
 
-    // TODO: bool operator==(const Covariance2d& other) const
-    //   Use std::abs(a - b) < 1e-9 for each field.
+    bool operator==(const Covariance2d& other) const {
+        return std::abs(var_x_  - other.var_x_)  < 1e-9 &&
+               std::abs(var_y_  - other.var_y_)  < 1e-9 &&
+               std::abs(cov_xy_ - other.cov_xy_) < 1e-9;
+    }
 
-    static int active_count();   // returns instance_count_
+    static int active_count() { return instance_count_; }
 
 private:
     double var_x_;
@@ -169,11 +182,7 @@ private:
     double cov_xy_;
 };
 
-// TODO: define Covariance2d::instance_count_ here (outside class, initialise to 0)
-//   int Covariance2d::instance_count_ = 0;
-
-// TODO: implement active_count() here (or inline in the class — your choice,
-//   but think about which is better style and why)
+int Covariance2d::instance_count_ = 0;
 
 
 // ── main ─────────────────────────────────────────────────────────────────────

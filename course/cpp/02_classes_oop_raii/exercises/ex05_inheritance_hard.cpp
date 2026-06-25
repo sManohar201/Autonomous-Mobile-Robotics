@@ -27,7 +27,7 @@
 //
 // Q4. The inner ScopedPipelineTimer is a class defined inside SensorPipeline.
 //     What does this scoping mean?  Can code outside SensorPipeline use it
-//     directly?  Why is an inner class a good design choice here?
+//     directly?  What is the inner class a good design choice here?
 //
 // ── Provided types (do not modify) ───────────────────────────────────────────
 
@@ -65,174 +65,222 @@ static const char* health_str(HealthStatus h) {
 
 // ── ANSWERS ──────────────────────────────────────────────────────────────────
 // A1 (virtual destructor):
-//   TODO
+//   Without a virtual destructor, deleting a derived object through a base
+//   pointer calls only the base destructor. The derived members — including
+//   any heap allocations — are never cleaned up. This is undefined behaviour
+//   and causes memory/resource leaks. With a virtual destructor the correct
+//   derived destructor is called first, then the base destructor.
 //
 // A2 (unique_ptr vs raw pointer):
-//   TODO
+//   unique_ptr enforces single ownership and calls delete automatically on
+//   scope exit. With a raw pointer the caller must remember to call delete
+//   (or use a smart pointer manually). unique_ptr also prevents accidental
+//   copies (deleted copy constructor) making the ownership semantics explicit.
 //
 // A3 (health check before read):
-//   TODO
+//   A FAILED sensor may have an invalid device handle (null fd, disconnected
+//   USB, etc.). Calling read() on it would dereference a null pointer or block
+//   indefinitely waiting for I/O that will never arrive. In a real LiDAR
+//   driver, read() might call ioctl() on a closed file descriptor — SIGSEGV
+//   or EBADF, hanging the entire pipeline iteration.
 //
 // A4 (inner class scoping):
-//   TODO
+//   ScopedPipelineTimer is scoped to SensorPipeline — external code cannot
+//   name the type without the outer class prefix (SensorPipeline::ScopedPipelineTimer).
+//   If declared private, external code cannot use it at all. It is a good
+//   design choice because the timer is an implementation detail of run_once();
+//   exposing it globally would pollute the namespace and imply it is part of
+//   the public API.
 
 // ── SensorPlugin (abstract base) ─────────────────────────────────────────────
-//
-// TODO: Define the abstract base class with:
-//   - pure virtual Measurement read() const = 0
-//   - pure virtual bool configure(const Config& cfg) = 0
-//   - pure virtual HealthStatus check_health() const = 0
-//   - pure virtual std::string id() const = 0
-//   - virtual destructor (must be virtual — answer Q1 above)
-//   - static factory:
-//       static std::unique_ptr<SensorPlugin> create(const std::string& type)
-//       Supported types: "lidar", "imu", "gps"
-//       Unknown type: return nullptr.
-//       THINK: the factory must be defined AFTER the concrete classes so it
-//       can name them.  Forward-declare the class, define concrete classes,
-//       then define the factory body outside the class, OR define the factory
-//       body after all concrete classes.
+
+class MockLidar;  // forward declaration so factory can name it
+
+class SensorPlugin {
+public:
+    virtual ~SensorPlugin() = default;
+
+    virtual Measurement  read()                     const = 0;
+    virtual bool         configure(const Config& cfg)     = 0;
+    virtual HealthStatus check_health()             const = 0;
+    virtual std::string  id()                       const = 0;
+
+    static std::unique_ptr<SensorPlugin> create(const std::string& type);
+};
 
 
 // ── MockLidar ─────────────────────────────────────────────────────────────────
-//
-// TODO: Implement MockLidar inheriting from SensorPlugin.
-//
-// Members:
-//   double max_range_     (default 10.0)
-//   bool   failed_        (default false) — set by inject_failure()
-//
-// configure(cfg):
-//   If cfg.key == "max_range": store cfg.value as max_range_.
-//     Return false if cfg.value < 0 (invalid range).
-//   For any other key: return false (unrecognised).
-//   Return true on success.
-//
-// read():
-//   Returns a Measurement with:
-//     sensor_id = id()
-//     timestamp = 0.0
-//     data      = 360 values, all equal to max_range_ * 0.5
-//   THINK: a real LiDAR read() on a FAILED sensor might dereference a null
-//   device handle.  In production code the pipeline guards this.
-//
-// check_health():
-//   FAILED   if max_range_ <= 0
-//   DEGRADED if failed_ == true
-//   OK       otherwise
-//   NOTE: FAILED takes priority over DEGRADED — check max_range_ first.
-//
-// id(): returns "lidar"
-//
-// inject_failure(): sets failed_ = true
-//
-// TRICKY: what is the right order to check health conditions?  If max_range_
-// is -1 AND failed_ is true, should the result be FAILED or DEGRADED?
-// The answer depends on which condition is more severe and checked first.
+
+class MockLidar : public SensorPlugin {
+public:
+    MockLidar() : max_range_(10.0), failed_(false) {}
+
+    bool configure(const Config& cfg) override {
+        if (cfg.key == "max_range") {
+            if (cfg.value < 0.0) return false;
+            max_range_ = cfg.value;
+            return true;
+        }
+        return false;
+    }
+
+    Measurement read() const override {
+        Measurement m;
+        m.sensor_id = id();
+        m.timestamp = 0.0;
+        m.data.assign(360, max_range_ * 0.5);
+        return m;
+    }
+
+    HealthStatus check_health() const override {
+        if (max_range_ <= 0.0) return HealthStatus::FAILED;
+        if (failed_)           return HealthStatus::DEGRADED;
+        return HealthStatus::OK;
+    }
+
+    std::string id() const override { return "lidar"; }
+
+    void inject_failure() { failed_ = true; }
+
+private:
+    double max_range_;
+    bool   failed_;
+};
 
 
 // ── MockIMU ──────────────────────────────────────────────────────────────────
-//
-// TODO: Implement MockIMU inheriting from SensorPlugin.
-//
-// Members:
-//   double noise_std_   (default 0.01)
-//
-// configure(cfg):
-//   If cfg.key == "noise_std": store cfg.value as noise_std_.
-//   Return true.
-//
-// read():
-//   Returns Measurement with 6 values: [ax, ay, az, gx, gy, gz]
-//   All values = noise_std_  (a trivial mock)
-//
-// check_health():
-//   noise_std_ > 1.0 → DEGRADED  (unrealistically high noise)
-//   otherwise        → OK
-//
-// id(): returns "imu"
+
+class MockIMU : public SensorPlugin {
+public:
+    MockIMU() : noise_std_(0.01) {}
+
+    bool configure(const Config& cfg) override {
+        if (cfg.key == "noise_std") {
+            noise_std_ = cfg.value;
+        }
+        return true;
+    }
+
+    Measurement read() const override {
+        Measurement m;
+        m.sensor_id = id();
+        m.timestamp = 0.0;
+        m.data.assign(6, noise_std_);
+        return m;
+    }
+
+    HealthStatus check_health() const override {
+        if (noise_std_ > 1.0) return HealthStatus::DEGRADED;
+        return HealthStatus::OK;
+    }
+
+    std::string id() const override { return "imu"; }
+
+private:
+    double noise_std_;
+};
 
 
 // ── MockGPS ──────────────────────────────────────────────────────────────────
-//
-// TODO: Implement MockGPS inheriting from SensorPlugin.
-//
-// Members:
-//   int fix_quality_    (default 0)
-//
-// configure(cfg):
-//   If cfg.key == "fix_quality": fix_quality_ = static_cast<int>(cfg.value)
-//   Return true.
-//
-// read():
-//   Returns Measurement with 3 values: [lat, lon, alt]
-//   lat = 0.0, lon = 0.0, alt = fix_quality_ * 10.0
-//
-// check_health():
-//   fix_quality_ == 0 → FAILED
-//   fix_quality_ == 1 → DEGRADED
-//   fix_quality_ >= 2 → OK
-//
-// id(): returns "gps"
+
+class MockGPS : public SensorPlugin {
+public:
+    MockGPS() : fix_quality_(0) {}
+
+    bool configure(const Config& cfg) override {
+        if (cfg.key == "fix_quality") {
+            fix_quality_ = static_cast<int>(cfg.value);
+        }
+        return true;
+    }
+
+    Measurement read() const override {
+        Measurement m;
+        m.sensor_id = id();
+        m.timestamp = 0.0;
+        m.data = {0.0, 0.0, fix_quality_ * 10.0};
+        return m;
+    }
+
+    HealthStatus check_health() const override {
+        if (fix_quality_ == 0) return HealthStatus::FAILED;
+        if (fix_quality_ == 1) return HealthStatus::DEGRADED;
+        return HealthStatus::OK;
+    }
+
+    std::string id() const override { return "gps"; }
+
+private:
+    int fix_quality_;
+};
 
 
 // ── SensorPlugin factory body ─────────────────────────────────────────────────
-// TODO: Implement SensorPlugin::create() here (after MockLidar/IMU/GPS are
-// defined so the constructor calls resolve).
-// Return the right concrete type as unique_ptr<SensorPlugin>.
-// Return nullptr for unknown type strings.
+
+std::unique_ptr<SensorPlugin> SensorPlugin::create(const std::string& type) {
+    if (type == "lidar") return std::make_unique<MockLidar>();
+    if (type == "imu")   return std::make_unique<MockIMU>();
+    if (type == "gps")   return std::make_unique<MockGPS>();
+    return nullptr;
+}
 
 
 // ── SensorPipeline ────────────────────────────────────────────────────────────
-//
-// TODO: Implement SensorPipeline with the following interface.
-//
-// Inner class ScopedPipelineTimer:
-//   - Defined inside SensorPipeline (private or public — your choice, but
-//     think about encapsulation).
-//   - Constructor: records start time and a label.
-//   - Destructor: prints "[pipeline] <label> completed in <ms> ms"
-//   - Non-copyable.
-//   Usage in run_once(): instantiate one at the top of the function body.
-//
-// register_sensor(std::unique_ptr<SensorPlugin> sensor):
-//   Takes ownership.  Stores in a std::vector<std::unique_ptr<SensorPlugin>>.
-//
-// run_once():
-//   Create a ScopedPipelineTimer at the start of the function.
-//   For each sensor:
-//     Check check_health().
-//     If OK:       call read(), append measurement to results.
-//     If DEGRADED: print "[pipeline] skipping degraded sensor: <id>\n"
-//     If FAILED:   print "[pipeline] skipping failed sensor: <id>\n"
-//   Return vector<Measurement>.
-//   CRITICAL: call check_health() FIRST.  Never call read() on a FAILED sensor.
-//
-// diagnose():
-//   Returns std::map<std::string, HealthStatus>
-//   Iterates sensors, maps sensor_id → check_health().
-//
-// THINK: run_once() returns by value — this means the result vector is
-// potentially moved on return (NRVO / move semantics).  With C++17 guaranteed
-// copy elision, no copy occurs.  Just return the local vector normally.
 
 class SensorPipeline {
 public:
-    // TODO: declare and implement all members described above.
-    //
-    // Skeleton to expand:
-    void register_sensor(std::unique_ptr<SensorPlugin> sensor);
+    void register_sensor(std::unique_ptr<SensorPlugin> sensor) {
+        sensors_.push_back(std::move(sensor));
+    }
 
-    std::vector<Measurement> run_once();
+    std::vector<Measurement> run_once() {
+        ScopedPipelineTimer timer("run_once");
+        std::vector<Measurement> results;
 
-    std::map<std::string, HealthStatus> diagnose();
+        for (const auto& sensor : sensors_) {
+            HealthStatus h = sensor->check_health();
+            if (h == HealthStatus::OK) {
+                results.push_back(sensor->read());
+            } else if (h == HealthStatus::DEGRADED) {
+                std::cout << "[pipeline] skipping degraded sensor: " << sensor->id() << "\n";
+            } else {
+                std::cout << "[pipeline] skipping failed sensor: " << sensor->id() << "\n";
+            }
+        }
+        return results;
+    }
+
+    std::map<std::string, HealthStatus> diagnose() {
+        std::map<std::string, HealthStatus> health;
+        for (const auto& sensor : sensors_) {
+            health[sensor->id()] = sensor->check_health();
+        }
+        return health;
+    }
 
 private:
     std::vector<std::unique_ptr<SensorPlugin>> sensors_;
 
-    // TODO: define inner class ScopedPipelineTimer here.
-    //   It may access SensorPipeline's private members if needed (inner classes
-    //   have access to the enclosing class's privates in C++).
+    class ScopedPipelineTimer {
+    public:
+        explicit ScopedPipelineTimer(const std::string& label)
+            : label_(label), start_(std::chrono::steady_clock::now())
+        {}
+
+        ~ScopedPipelineTimer() {
+            auto end = std::chrono::steady_clock::now();
+            auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(
+                           end - start_).count();
+            std::cout << "[pipeline] " << label_ << " completed in " << ms << " ms\n";
+        }
+
+        ScopedPipelineTimer(const ScopedPipelineTimer&)            = delete;
+        ScopedPipelineTimer& operator=(const ScopedPipelineTimer&) = delete;
+
+    private:
+        std::string label_;
+        std::chrono::steady_clock::time_point start_;
+    };
 };
 
 

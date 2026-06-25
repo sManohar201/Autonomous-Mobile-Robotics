@@ -27,47 +27,79 @@ class RingBuffer {
 public:
     static_assert(Capacity > 0, "RingBuffer capacity must be greater than zero");
 
-    // TODO 1: push(const T& value).
-    // Insert at the logical back. If full, overwrite the oldest element.
+    void push(const T& value) {
+        data_[head_] = value;
+        advance();
+    }
 
-    // TODO 2: push(T&& value).
-    // Same behavior, but move into storage.
+    void push(T&& value) {
+        data_[head_] = std::move(value);
+        advance();
+    }
 
-    // TODO 3: size(), capacity(), empty(), full().
+    constexpr std::size_t capacity() const { return Capacity; }
+    std::size_t size()  const { return size_; }
+    bool empty() const { return size_ == 0; }
+    bool full()  const { return size_ == Capacity; }
 
-    // TODO 4: at(index), const and non-const.
-    // Logical index 0 is the oldest element.
-    // Throw std::out_of_range if index >= size().
+    T& at(std::size_t index) {
+        return const_cast<T&>(static_cast<const RingBuffer&>(*this).at(index));
+    }
 
-    // TODO 5: newest() and oldest(), const.
-    // Throw std::out_of_range if empty.
+    const T& at(std::size_t index) const {
+        if (index >= size_)
+            throw std::out_of_range("ring buffer index out of range");
+        return data_[physical(index)];
+    }
+
+    const T& oldest() const {
+        if (empty()) throw std::out_of_range("ring buffer is empty");
+        return at(0);
+    }
+
+    const T& newest() const {
+        if (empty()) throw std::out_of_range("ring buffer is empty");
+        return at(size_ - 1);
+    }
 
 private:
-    // TODO: choose storage and indices.
+    void advance() {
+        head_ = (head_ + 1) % Capacity;
+        if (size_ < Capacity) ++size_;
+    }
+
+    std::size_t physical(std::size_t logical) const {
+        const std::size_t oldest_slot = full() ? head_ : 0;
+        return (oldest_slot + logical) % Capacity;
+    }
+
+    T           data_[Capacity]{};
+    std::size_t head_{0};
+    std::size_t size_{0};
 };
 
-// TODO 6: latest_timestamp(buffer), constrained to Timestamped T.
-// Returns newest().timestamp_ns.
+template <Timestamped T, std::size_t Capacity>
+std::uint64_t latest_timestamp(const RingBuffer<T, Capacity>& buffer) {
+    return buffer.newest().timestamp_ns;
+}
 
 int main() {
     RingBuffer<ImuSample, 3> buf;
 
-    // TODO: make these pass.
-    // assert(buf.empty());
-    // buf.push(ImuSample{10, 0.0, 0.0, 9.8});
-    // buf.push(ImuSample{20, 0.1, 0.0, 9.7});
-    // buf.push(ImuSample{30, 0.2, 0.0, 9.6});
-    // assert(buf.full());
-    // assert(buf.oldest().timestamp_ns == 10);
-    // assert(buf.newest().timestamp_ns == 30);
-    //
-    // buf.push(ImuSample{40, 0.3, 0.0, 9.5});
-    // assert(buf.size() == 3);
-    // assert(buf.oldest().timestamp_ns == 20);
-    // assert(buf.at(0).timestamp_ns == 20);
-    // assert(buf.at(2).timestamp_ns == 40);
-    // assert(latest_timestamp(buf) == 40);
+    assert(buf.empty());
+    buf.push(ImuSample{10, 0.0, 0.0, 9.8});
+    buf.push(ImuSample{20, 0.1, 0.0, 9.7});
+    buf.push(ImuSample{30, 0.2, 0.0, 9.6});
+    assert(buf.full());
+    assert(buf.oldest().timestamp_ns == 10);
+    assert(buf.newest().timestamp_ns == 30);
+
+    buf.push(ImuSample{40, 0.3, 0.0, 9.5});
+    assert(buf.size() == 3);
+    assert(buf.oldest().timestamp_ns == 20);
+    assert(buf.at(0).timestamp_ns == 20);
+    assert(buf.at(2).timestamp_ns == 40);
+    assert(latest_timestamp(buf) == 40);
 
     std::cout << "ex05_capstone_typed_ring_buffer passed\n";
 }
-

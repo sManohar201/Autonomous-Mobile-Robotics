@@ -15,55 +15,49 @@
 
 // Q1. Integer promotion:
 //     `uint8_t a = 200; uint8_t b = 100; auto c = a + b;`
-//     What is the type of c? What is its value?
-//     Why doesn't it wrap to 44 (as it would with 8-bit arithmetic)?
-//
-//     YOUR ANSWER:
-//     TODO
+//     Type of c: int (both operands are promoted to int before addition).
+//     Value: 300 — no wrapping because int is wide enough (32-bit holds 300).
+//     Would be 44 only if the result were stored back into uint8_t.
 
 // Q2. Usual arithmetic conversions (signed/unsigned mixing):
 //     `int neg = -1; uint32_t pos = 0; bool result = (neg < pos);`
-//     What is result? Trace the implicit conversion step by step.
-//
-//     YOUR ANSWER:
-//     TODO
+//     Step 1: int and uint32_t are mixed. uint32_t is wider (same width on
+//             64-bit if both are 32-bit) OR unsigned wins the conversion.
+//     Step 2: neg (-1) is converted to uint32_t → 0xFFFFFFFF = 4294967295.
+//     Step 3: 4294967295 < 0 → false.
+//     result = false. The signed -1 wraps to a huge unsigned value.
 
 // Q3. Endianness:
-//     What is endianness? Is x86-64 big-endian or little-endian?
-//     An IMU sends a 32-bit timestamp big-endian (MSB first).
-//     How do you reconstruct it correctly on a little-endian machine?
-//
-//     YOUR ANSWER:
-//     TODO
+//     Endianness: byte order within a multi-byte value.
+//       Big-endian: MSB at lowest address (network byte order).
+//       Little-endian: LSB at lowest address (x86-64, ARM default, most desktop CPUs).
+//     x86-64 is LITTLE-endian.
+//     To reconstruct a big-endian 32-bit timestamp on little-endian:
+//       ts = (uint32_t(buf[0]) << 24) | (uint32_t(buf[1]) << 16)
+//          | (uint32_t(buf[2]) <<  8) |  uint32_t(buf[3]);
 
 // Q4. Strict aliasing rule:
-//     `int32_t val = *reinterpret_cast<int32_t*>(byte_buf);`
-//     Why is this undefined behavior? What is the safe C++17 alternative?
-//     (Research: std::memcpy, std::bit_cast)
-//
-//     YOUR ANSWER:
-//     TODO
+//     `*reinterpret_cast<int32_t*>(byte_buf)` is UB because:
+//     The compiler assumes that pointers to different types never alias.
+//     Reading through an int32_t* a buffer that actually holds uint8_t data
+//     violates this assumption — the compiler may reorder or eliminate the read.
+//     Safe C++17 alternative: std::memcpy into an int32_t local variable.
+//     std::bit_cast<int32_t>(some_array) is clean but requires C++20.
 
-// Q5. Loop trap:
-//     `for (uint8_t i = 0; i < 256; ++i) { /* ... */ }`
-//     What happens and why? Trace using integer promotion rules.
-//
-//     YOUR ANSWER:
-//     TODO
+// Q5. Loop trap: `for (uint8_t i = 0; i < 256; ++i)`
+//     After i = 255, ++i promotes 255 to int, adds 1 → 256, then truncates back
+//     to uint8_t → 0. The loop condition 0 < 256 is true again → infinite loop.
 
 // Q6. constexpr vs const:
-//     (a) Can a constexpr function be called at runtime?
-//     (b) Can a constexpr function contain if-statements and for-loops (C++17)?
-//     (c) What is the fundamental difference between constexpr and const?
-//
-//     YOUR ANSWER:
-//     TODO
+//     (a) Yes, a constexpr function can be called at runtime (if called with
+//         non-constant arguments, it runs as a regular function).
+//     (b) Yes (C++14+), constexpr functions may contain if-statements and loops.
+//     (c) const means "this value does not change after initialisation" — evaluated
+//         at runtime. constexpr means "evaluate at compile time if possible" — the
+//         compiler must be able to compute it with constant arguments.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PART A — Predict the output of each snippet BEFORE compiling.
-//
-// Write your prediction as a comment on the line marked PREDICT, then compile
-// and compare. Explain any surprises.
 // ─────────────────────────────────────────────────────────────────────────────
 
 #include <iostream>
@@ -76,7 +70,7 @@ void part_a() {
     std::cout << std::fixed << std::setprecision(5);
 
     // Snippet 1 — integer promotion on uint8_t addition
-    // PREDICT: TODO (what does this print?)
+    // PREDICT: 300 (both promoted to int; 200+100=300, no 8-bit truncation)
     {
         uint8_t a = 200, b = 100;
         auto c = a + b;
@@ -84,7 +78,7 @@ void part_a() {
     }
 
     // Snippet 2 — signed/unsigned comparison trap
-    // PREDICT: TODO
+    // PREDICT: "not less" (-1 converted to uint32_t → huge positive number)
     {
         int neg = -1;
         uint32_t pos = 0;
@@ -92,7 +86,7 @@ void part_a() {
     }
 
     // Snippet 3 — uint8_t overflow
-    // PREDICT: TODO
+    // PREDICT: 0 (255 + 1 wraps modulo 256 back to 0)
     {
         uint8_t count = 255;
         count += 1;
@@ -100,7 +94,7 @@ void part_a() {
     }
 
     // Snippet 4 — int16_t to double division (note: integer / floating-point)
-    // PREDICT: TODO
+    // PREDICT: -0.97656 (-32000 / 32768.0 ≈ -0.97656)
     {
         int16_t raw = -32000;
         double scaled = raw / 32768.0;
@@ -108,8 +102,8 @@ void part_a() {
     }
 
     // Snippet 5 — two comparisons: one with cast, one without
-    // PREDICT snippet5a (with cast): TODO
-    // PREDICT snippet5b (without cast): TODO
+    // PREDICT snippet5a (with cast): "A" (-1 < 3 as signed comparison → true)
+    // PREDICT snippet5b (without cast): "D" (-1 converted to unsigned → huge, not < 3)
     {
         unsigned int limit = 3;
         int idx = -1;
@@ -120,83 +114,66 @@ void part_a() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PART B — constexpr sensor utility functions
-//
-// Implement each function AND add the given static_assert to verify
-// compile-time evaluation.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // B1. Convert raw ADC value to acceleration in m/s²
-//     Formula: (raw / 32768.0) * full_scale_g * 9.80665
-//     The sensor full-scale is specified in units of g.
-//
-// TODO: Implement
 constexpr double lsb_to_ms2(int16_t raw, double full_scale_g) {
-    return 0.0; // TODO
+    return (raw / 32768.0) * full_scale_g * 9.80665;
 }
-// After implementing, uncomment to verify compile-time evaluation:
-// static_assert(lsb_to_ms2(0, 2.0) == 0.0, "lsb_to_ms2(0, 2.0) should be 0");
+static_assert(lsb_to_ms2(0, 2.0) == 0.0, "lsb_to_ms2(0, 2.0) should be 0");
 
 // B2. Convert milliseconds to microseconds, saturating on overflow.
-//     A naive `ms * 1000` overflows for large ms values.
-//     Safe version: check before multiplying.
-//     Use: return ms > (UINT32_MAX / 1000u) ? UINT32_MAX : ms * 1000u;
-//
-// TODO: Implement
 constexpr uint32_t ms_to_us(uint32_t ms) {
-    return 0u; // TODO
+    return ms > (UINT32_MAX / 1000u) ? UINT32_MAX : ms * 1000u;
 }
-// After implementing, uncomment to verify compile-time evaluation:
-// static_assert(ms_to_us(1000u) == 1000000u, "ms_to_us(1000) should be 1000000");
+static_assert(ms_to_us(1000u) == 1000000u, "ms_to_us(1000) should be 1000000");
 
 // B3. Validate an IMU start byte: the high nibble must equal 0xA.
-//     Use ONLY bitwise operations — no division, no multiplication.
-//
-// TODO: Implement
 constexpr bool is_valid_imu_header(uint8_t b) {
-    return false; // TODO
+    return (b >> 4) == 0xA;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PART C — Safe IMU binary packet parser
-//
-// Wire format (16 bytes total):
-//   Bytes [0..3]:   timestamp_ms  — BIG-ENDIAN (MSB first)
-//   Bytes [4..5]:   ax            — little-endian int16_t
-//   Bytes [6..7]:   ay            — little-endian int16_t
-//   Bytes [8..9]:   az            — little-endian int16_t
-//   Bytes [10..11]: gx            — little-endian int16_t
-//   Bytes [12..13]: gy            — little-endian int16_t
-//   Bytes [14..15]: gz            — little-endian int16_t
-//
-// Rules:
-//   - Throw std::runtime_error("invalid packet") if len < 16
-//   - Reconstruct timestamp using ONLY bit-shifts and OR (not memcpy/reinterpret_cast)
-//   - Reconstruct each int16_t using little-endian reconstruction
-//   - Add a comment explaining WHY reinterpret_cast<int32_t*>(buf) is UB here
 // ─────────────────────────────────────────────────────────────────────────────
 
 struct ImuPacket {
     uint32_t timestamp_ms;
-    int16_t  ax, ay, az;   // raw ADC, ±4g scale
-    int16_t  gx, gy, gz;   // raw ADC, ±500 dps scale
+    int16_t  ax, ay, az;
+    int16_t  gx, gy, gz;
 };
 
-// TODO: Why is reinterpret_cast<int32_t*>(buf) UB here?
-// Explain strict aliasing in a comment below:
-//
-// TODO: YOUR ANSWER
+// WHY reinterpret_cast<int32_t*>(buf) is UB here:
+// The buffer holds uint8_t data. Accessing it through an int32_t* violates the
+// strict aliasing rule: the compiler assumes int32_t* and uint8_t* never point
+// to the same memory. The compiler may cache the buffer contents in registers
+// and never re-read from memory, producing wrong results. Use std::memcpy to
+// safely copy bytes into a correctly-typed local variable.
 
 ImuPacket parse_packet(const uint8_t* buf, int len) {
-    // TODO: implement
-    //   1. Check len >= 16, throw if not
-    //   2. Reconstruct timestamp (big-endian):
-    //      uint32_t ts = (uint32_t(buf[0])<<24) | (uint32_t(buf[1])<<16)
-    //                  | (uint32_t(buf[2])<<8)  |  uint32_t(buf[3]);
-    //   3. Reconstruct each int16_t (little-endian):
-    //      int16_t ax = int16_t((uint16_t(buf[5])<<8) | uint16_t(buf[4]));
-    //      (note: buf[i+1] is the high byte, buf[i] is the low byte)
-    //   4. Fill and return ImuPacket
-    return ImuPacket{}; // TODO
+    if (len < 16) {
+        throw std::runtime_error("invalid packet");
+    }
+
+    // Reconstruct big-endian timestamp using only bit-shifts and OR.
+    uint32_t ts = (uint32_t(buf[0]) << 24) | (uint32_t(buf[1]) << 16)
+                | (uint32_t(buf[2]) <<  8) |  uint32_t(buf[3]);
+
+    // Reconstruct each little-endian int16_t via bit manipulation.
+    // buf[i] is the low byte; buf[i+1] is the high byte.
+    auto le16 = [](const uint8_t* b) -> int16_t {
+        return static_cast<int16_t>((uint16_t(b[1]) << 8) | uint16_t(b[0]));
+    };
+
+    ImuPacket pkt;
+    pkt.timestamp_ms = ts;
+    pkt.ax = le16(buf + 4);
+    pkt.ay = le16(buf + 6);
+    pkt.az = le16(buf + 8);
+    pkt.gx = le16(buf + 10);
+    pkt.gy = le16(buf + 12);
+    pkt.gz = le16(buf + 14);
+    return pkt;
 }
 
 int main() {
@@ -216,15 +193,8 @@ int main() {
               << static_cast<int>(is_valid_imu_header(0xB0)) << "\n";
 
     // Part C — parse test packet
-    // Wire bytes encode: timestamp=4000ms, ax=-448, ay=0, az=2048,
-    //                    gx=1000, gy=0, gz=0
-    // Verify by hand:
-    //   0x00000FA0 = 4000
-    //   0xFE40 (little-endian bytes: 0x40, 0xFE) = -448 signed
-    //   0x0800 (little-endian bytes: 0x00, 0x08) = 2048
-    //   0x03E8 (little-endian bytes: 0xE8, 0x03) = 1000
     uint8_t test_packet[] = {
-        0x00, 0x00, 0x0F, 0xA0,  // timestamp big-endian
+        0x00, 0x00, 0x0F, 0xA0,  // timestamp big-endian: 4000
         0x40, 0xFE,              // ax little-endian: -448
         0x00, 0x00,              // ay: 0
         0x00, 0x08,              // az little-endian: 2048

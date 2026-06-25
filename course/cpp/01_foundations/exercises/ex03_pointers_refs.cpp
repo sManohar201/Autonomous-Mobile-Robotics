@@ -17,26 +17,38 @@
 // 1. Swap two integers using references.
 //    After the call: a and b should have exchanged values.
 void swap_by_ref(int& a, int& b) {
-    // TODO
+    int tmp = a;
+    a = b;
+    b = tmp;
 }
 
 // 2. Swap two integers using pointers.
 //    After the call: *a and *b should have exchanged values.
 void swap_by_ptr(int* a, int* b) {
-    // TODO
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
 }
 
 // 3. Normalise a 2D vector in-place using references.
 //    After the call: (x,y) should have magnitude 1.0.
 void normalize(double& x, double& y) {
-    // TODO
+    double mag = std::sqrt(x * x + y * y);
+    x /= mag;
+    y /= mag;
 }
 
 // 4. Divide a by b. Store the result in *result.
 //    If b is zero: print "Divide by zero" and return without touching *result.
 //    Use a pointer for result — null means "caller doesn't need the output".
 void safe_divide(double a, double b, double* result) {
-    // TODO
+    if (b == 0.0) {
+        std::cout << "Divide by zero\n";
+        return;
+    }
+    if (result) {
+        *result = a / b;
+    }
 }
 
 int main() {

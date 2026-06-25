@@ -27,7 +27,20 @@ double compute_hypotenuse(double a, double b);
 
 // ─── ADD YOUR DEFINITION HERE (Task 2) ───────────────────────────────────────
 
+// Task 1: The original build fails at the LINKER stage, not the compiler stage.
+//   The compiler accepts the .cpp because it sees the declaration.
+//   The linker cannot find the body → "undefined reference to compute_hypotenuse"
+//
+// Task 2: Define the function here so compiler + linker both succeed.
+double compute_hypotenuse(double a, double b) {
+    return std::sqrt(a * a + b * b);
+}
 
+// Task 3 (already done via CMakeLists.txt):
+//   hypotenuse.cpp provides the definition.
+//   CMakeLists.txt: add_library(hypotenuse hypotenuse.cpp)
+//                   target_link_libraries(ex01_pipeline PRIVATE hypotenuse)
+//   If you forget to add hypotenuse.cpp to the library, the linker error returns.
 
 // ─────────────────────────────────────────────────────────────────────────────
 

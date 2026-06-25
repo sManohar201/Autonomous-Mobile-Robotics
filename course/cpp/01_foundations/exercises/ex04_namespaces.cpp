@@ -20,18 +20,19 @@ namespace geometry {
 
     // Overload 1: 2D magnitude from two doubles
     double magnitude(double x, double y) {
-        // TODO
-        return 0.0;
+        return std::sqrt(x * x + y * y);
     }
 
     // Overload 2: 2D magnitude from two floats
     // The compiler picks this when arguments are float, not double.
     double magnitude(float x, float y) {
-        // TODO: cast to double, then compute
-        return 0.0;
+        return std::sqrt(static_cast<double>(x) * x + static_cast<double>(y) * y);
     }
 
     // TODO: Overload 3 — 3D magnitude(double x, double y, double z)
+    double magnitude(double x, double y, double z) {
+        return std::sqrt(x * x + y * y + z * z);
+    }
 
 } // namespace geometry
 
@@ -47,6 +48,7 @@ int main() {
     demonstrate_local_using();
 
     // TODO: call the 3D overload here
+    std::cout << "3D magnitude(1, 2, 2) = " << geometry::magnitude(1.0, 2.0, 2.0) << "\n";
 
     return 0;
 }

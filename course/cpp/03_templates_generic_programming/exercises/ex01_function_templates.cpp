@@ -13,40 +13,48 @@
 #include <iostream>
 #include <type_traits>
 
-// TODO 1: Implement clamp(T value, T lo, T hi).
-// Requirements:
-//   - Works for int, float, double.
-//   - Does not use std::clamp.
+template <typename T>
+T clamp(T value, T lo, T hi) {
+    if (value < lo) return lo;
+    if (hi < value) return hi;
+    return value;
+}
 
-// TODO 2: Implement square(T x).
+template <typename T>
+T square(T x) {
+    return x * x;
+}
 
-// TODO 3: Implement magnitude2(x, y).
-// Requirements:
-//   - Accepts arithmetic types only.
-//   - Returns double.
-//   - Uses static_assert for the arithmetic constraint.
+// Accepts only arithmetic types — the static_assert fires at instantiation for
+// pointer, struct, or other non-arithmetic T.
+template <typename T>
+double magnitude2(T x, T y) {
+    static_assert(std::is_arithmetic_v<T>, "magnitude2 requires arithmetic T");
+    const double dx = static_cast<double>(x);
+    const double dy = static_cast<double>(y);
+    return std::sqrt(dx * dx + dy * dy);
+}
 
-// TODO 4: Explain before coding:
-//   Why does max_same_type(1, 2.5) fail if the function has one template
-//   parameter T?
-//   YOUR ANSWER:
-//   TODO
-
+// Q4 answer — Why does max_same_type(1, 2.5) fail with one template param T?
+//   Template argument deduction deduces T from each argument independently.
+//   From `1` → T = int.  From `2.5` → T = double.
+//   The two deductions conflict; the compiler cannot resolve T to a single type.
+//   It does NOT perform implicit conversions during deduction — deduction must
+//   succeed unambiguously before any conversion is applied.
+//   Fix: explicit instantiation max_same_type<double>(1, 2.5), or use two params.
 template <typename T>
 T max_same_type(T a, T b) {
     return a < b ? b : a;
 }
 
 int main() {
-    // TODO: make these pass.
-    // assert(clamp(9, 0, 5) == 5);
-    // assert(clamp(-1.0, 0.0, 10.0) == 0.0);
-    // assert(square(4) == 16);
-    // assert(std::abs(magnitude2(3, 4) - 5.0) < 1e-9);
+    assert(clamp(9, 0, 5) == 5);
+    assert(clamp(-1.0, 0.0, 10.0) == 0.0);
+    assert(square(4) == 16);
+    assert(std::abs(magnitude2(3, 4) - 5.0) < 1e-9);
 
     auto m = max_same_type<double>(1, 2.5);
     assert(m == 2.5);
 
     std::cout << "ex01_function_templates passed\n";
 }
-

@@ -1,9 +1,5 @@
 // Exercise 03 — RAII
 //
-// TASK:
-//   Implement two RAII wrappers below.
-//   Do not change main().
-//
 // EXPECTED OUTPUT:
 //   [timer] ScopedTimer started
 //   processing...
@@ -21,19 +17,19 @@
 #include <stdexcept>
 #include <string>
 
-// ── Part A: ScopedTimer ──────────────────────────────────────────────────────
-// Records the time at construction.
-// On destruction, prints elapsed milliseconds.
-//
 class ScopedTimer {
 public:
-    // TODO: constructor — store label, record start time,
-    //       print "[timer] <label> started\n"
-    explicit ScopedTimer(const std::string& label);
+    explicit ScopedTimer(const std::string& label)
+        : label_(label), start_(std::chrono::steady_clock::now())
+    {
+        std::cout << "[timer] " << label_ << " started\n";
+    }
 
-    // TODO: destructor — compute elapsed ms,
-    //       print "[timer] <label> stopped: <ms> ms\n"
-    ~ScopedTimer();
+    ~ScopedTimer() {
+        auto end = std::chrono::steady_clock::now();
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start_).count();
+        std::cout << "[timer] " << label_ << " stopped: " << ms << " ms\n";
+    }
 
 private:
     std::string label_;
@@ -41,8 +37,6 @@ private:
 };
 
 
-// ── Part B: ScopedLock ───────────────────────────────────────────────────────
-// FakeMutex is provided — do not modify it.
 struct FakeMutex {
     void lock()   { std::cout << "[lock] acquired\n"; }
     void unlock() { std::cout << "[lock] released\n"; }
@@ -50,42 +44,40 @@ struct FakeMutex {
 
 class ScopedLock {
 public:
-    // TODO: constructor — call mutex.lock()
-    explicit ScopedLock(FakeMutex& m);
+    explicit ScopedLock(FakeMutex& m) : mutex_(m) {
+        mutex_.lock();
+    }
 
-    // TODO: destructor — call mutex_.unlock()
-    ~ScopedLock();
+    ~ScopedLock() {
+        mutex_.unlock();
+    }
 
-    // TODO: delete copy constructor and copy assignment
-    //       (why? — locks must not be duplicated)
+    ScopedLock(const ScopedLock&)            = delete;
+    ScopedLock& operator=(const ScopedLock&) = delete;
 
 private:
     FakeMutex& mutex_;
 };
 
 
-// ── main ─────────────────────────────────────────────────────────────────────
 void simulate_work() {
     auto end = std::chrono::steady_clock::now() + std::chrono::milliseconds(1);
     while (std::chrono::steady_clock::now() < end) {}
 }
 
 int main() {
-    // Part A
     {
         ScopedTimer t("ScopedTimer");
         simulate_work();
         std::cout << "processing...\n";
     }
 
-    // Part B — normal path
     FakeMutex mtx;
     {
         ScopedLock lk(mtx);
         std::cout << "critical section\n";
     }
 
-    // Part B — exception path (lock must still be released)
     try {
         ScopedLock lk(mtx);
         std::cout << "critical section (will throw)\n";

@@ -78,20 +78,7 @@
 //   operator<< : "(x, y)"
 //
 // class Transform2d
-//   double tx_, ty_, theta_   (private)
-//
-//   Constructor: Transform2d(double tx, double ty, double theta)
-//   static identity(): returns Transform2d(0, 0, 0)
-//   Accessors: tx(), ty(), theta()
-//
-//   operator*(const Transform2d& other) const — SE(2) composition
-//   operator*(const Vec2& p)            const — apply transform to point
-//   inverse()                           const — return inverse transform
-//   operator*=(const Transform2d& other)      — compound: *this = *this * other
-//   operator==(const Transform2d& other) const — within 1e-9 per field
-//   operator!=(const Transform2d& other) const — implemented via ==
-//   operator<<  (free function)                 — "(tx=<tx>, ty=<ty>, θ=<theta>)"
-//
+
 // ── Subtle trap ──────────────────────────────────────────────────────────────
 // When implementing operator*=, a naive "this->tx_ = tx_ + ..." is WRONG
 // because you are overwriting tx_ before finishing the computation with the
@@ -111,6 +98,7 @@
 #include <iostream>
 #include <cmath>
 #include <cassert>
+#include <iomanip>
 
 // ── Vec2 ─────────────────────────────────────────────────────────────────────
 
@@ -119,64 +107,81 @@ struct Vec2 {
     Vec2(double x = 0.0, double y = 0.0) : x(x), y(y) {}
 };
 
-// TODO: implement operator<< for Vec2
-//   Format: "(x, y)"  with 2 decimal places.
-std::ostream& operator<<(std::ostream& os, const Vec2& v);
+std::ostream& operator<<(std::ostream& os, const Vec2& v) {
+    os << std::fixed << std::setprecision(2) << "(" << v.x << ", " << v.y << ")";
+    return os;
+}
 
 
 // ── Transform2d ──────────────────────────────────────────────────────────────
 
 class Transform2d {
 public:
-    // TODO: Constructor
-    Transform2d(double tx, double ty, double theta);
+    Transform2d(double tx, double ty, double theta)
+        : tx_(tx), ty_(ty), theta_(theta)
+    {}
 
-    // TODO: static identity() — returns Transform2d(0, 0, 0)
-    static Transform2d identity();
+    static Transform2d identity() {
+        return Transform2d(0.0, 0.0, 0.0);
+    }
 
-    // Accessors
     double tx()    const { return tx_; }
     double ty()    const { return ty_; }
     double theta() const { return theta_; }
 
-    // TODO: operator*(const Transform2d&) const — SE(2) composition
-    //   composed.theta = theta_ + other.theta_
-    //   composed.tx    = tx_ + cos(theta_)*other.tx_ - sin(theta_)*other.ty_
-    //   composed.ty    = ty_ + sin(theta_)*other.tx_ + cos(theta_)*other.ty_
-    //   THINK: this is not symmetric in *this and other.  Why does order matter?
-    Transform2d operator*(const Transform2d& other) const;
+    Transform2d operator*(const Transform2d& other) const {
+        double c = std::cos(theta_);
+        double s = std::sin(theta_);
+        return Transform2d(
+            tx_ + c * other.tx_ - s * other.ty_,
+            ty_ + s * other.tx_ + c * other.ty_,
+            theta_ + other.theta_
+        );
+    }
 
-    // TODO: operator*(const Vec2&) const — apply transform to a point
-    //   new_x = tx_ + cos(theta_)*p.x - sin(theta_)*p.y
-    //   new_y = ty_ + sin(theta_)*p.x + cos(theta_)*p.y
-    Vec2 operator*(const Vec2& p) const;
+    Vec2 operator*(const Vec2& p) const {
+        double c = std::cos(theta_);
+        double s = std::sin(theta_);
+        return Vec2(
+            tx_ + c * p.x - s * p.y,
+            ty_ + s * p.x + c * p.y
+        );
+    }
 
-    // TODO: inverse() const — T^{-1} = (R^T, -R^T * t)
-    //   inv.theta = -theta_
-    //   inv.tx    = -(cos(theta_)*tx_ + sin(theta_)*ty_)
-    //   inv.ty    =   sin(theta_)*tx_ - cos(theta_)*ty_
-    //   Verify by hand before implementing: T * T.inverse() should give (0,0,0).
-    Transform2d inverse() const;
+    Transform2d inverse() const {
+        double c = std::cos(theta_);
+        double s = std::sin(theta_);
+        return Transform2d(
+            -(c * tx_ + s * ty_),
+             s * tx_ - c * ty_,
+            -theta_
+        );
+    }
 
-    // TODO: operator*= — update *this = *this * other
-    //   WARNING: do NOT do  tx_ = tx_ + cos(theta_)*other.tx_ - ...
-    //   because you overwrite tx_ before using it to compute ty_.
-    //   Compute the new transform fully, then assign.
-    Transform2d& operator*=(const Transform2d& other);
+    Transform2d& operator*=(const Transform2d& other) {
+        *this = *this * other;
+        return *this;
+    }
 
-    // TODO: operator== — all three fields within 1e-9
-    bool operator==(const Transform2d& other) const;
+    bool operator==(const Transform2d& other) const {
+        return std::abs(tx_    - other.tx_)    < 1e-9 &&
+               std::abs(ty_    - other.ty_)    < 1e-9 &&
+               std::abs(theta_ - other.theta_) < 1e-9;
+    }
 
-    // TODO: operator!= — implemented in terms of operator==
-    bool operator!=(const Transform2d& other) const;
+    bool operator!=(const Transform2d& other) const {
+        return !(*this == other);
+    }
 
 private:
     double tx_, ty_, theta_;
 };
 
-// TODO: operator<< for Transform2d (free function)
-//   Format: "(tx=<tx>, ty=<ty>, θ=<theta>)"  with 4 decimal places.
-std::ostream& operator<<(std::ostream& os, const Transform2d& T);
+std::ostream& operator<<(std::ostream& os, const Transform2d& T) {
+    os << std::fixed << std::setprecision(4)
+       << "(tx=" << T.tx() << ", ty=" << T.ty() << ", θ=" << T.theta() << ")";
+    return os;
+}
 
 
 // ── main ─────────────────────────────────────────────────────────────────────

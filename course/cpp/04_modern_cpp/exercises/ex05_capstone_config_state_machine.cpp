@@ -20,39 +20,39 @@ struct ControllerConfig {
     bool publish_debug;
 };
 
-// TODO 1: Implement get_as<T>(cfg, key).
-// Return std::optional<T>. Missing key or wrong type returns std::nullopt.
+template <typename T>
+std::optional<T> get_as(const ConfigMap& cfg, const std::string& key) {
+    const auto it = cfg.find(key);
+    if (it == cfg.end()) return std::nullopt;
+    if (const auto* value = std::get_if<T>(&it->second)) return *value;
+    return std::nullopt;
+}
 
-// TODO 2: Implement parse_controller_config.
-// Required:
-//   - rate_hz: double, must be > 0
-//   - frame_id: std::string, must be non-empty
-// Optional:
-//   - publish_debug: bool, defaults to false
+std::optional<ControllerConfig> parse_controller_config(const ConfigMap& cfg) {
+    const auto rate_hz  = get_as<double>(cfg, "rate_hz");
+    const auto frame_id = get_as<std::string>(cfg, "frame_id");
+    if (!rate_hz || *rate_hz <= 0.0)    return std::nullopt;
+    if (!frame_id || frame_id->empty()) return std::nullopt;
+    return ControllerConfig{
+        *rate_hz,
+        *frame_id,
+        get_as<bool>(cfg, "publish_debug").value_or(false)
+    };
+}
 
-enum class State {
-    Idle,
-    Configured,
-    Running,
-    Fault
-};
+enum class State  { Idle, Configured, Running, Fault };
+enum class Event  { Configure, Start, Stop, Error, Reset };
 
-enum class Event {
-    Configure,
-    Start,
-    Stop,
-    Error,
-    Reset
-};
-
-// TODO 3: Implement constexpr transition(State, Event).
-// Rules:
-//   Idle + Configure -> Configured
-//   Configured + Start -> Running
-//   Running + Stop -> Configured
-//   Any state + Error -> Fault
-//   Fault + Reset -> Idle
-//   Otherwise stay in current state.
+constexpr State transition(State state, Event event) {
+    if (event == Event::Error) return State::Fault;
+    switch (state) {
+    case State::Idle:       return event == Event::Configure ? State::Configured : state;
+    case State::Configured: return event == Event::Start     ? State::Running    : state;
+    case State::Running:    return event == Event::Stop      ? State::Configured : state;
+    case State::Fault:      return event == Event::Reset     ? State::Idle       : state;
+    }
+    return State::Fault;
+}
 
 int main() {
     ConfigMap cfg{
@@ -61,20 +61,17 @@ int main() {
         {"publish_debug", true},
     };
 
-    // TODO: make these pass.
-    // auto parsed = parse_controller_config(cfg);
-    // assert(parsed);
-    // assert(parsed->rate_hz == 50.0);
-    // assert(parsed->frame_id == "base_link");
-    // assert(parsed->publish_debug);
-    //
-    // static_assert(transition(State::Idle, Event::Configure) == State::Configured);
-    // static_assert(transition(State::Configured, Event::Start) == State::Running);
-    // static_assert(transition(State::Running, Event::Stop) == State::Configured);
-    // static_assert(transition(State::Running, Event::Error) == State::Fault);
-    // static_assert(transition(State::Fault, Event::Reset) == State::Idle);
+    auto parsed = parse_controller_config(cfg);
+    assert(parsed);
+    assert(parsed->rate_hz == 50.0);
+    assert(parsed->frame_id == "base_link");
+    assert(parsed->publish_debug);
 
-    (void)cfg;
+    static_assert(transition(State::Idle, Event::Configure)      == State::Configured);
+    static_assert(transition(State::Configured, Event::Start)    == State::Running);
+    static_assert(transition(State::Running, Event::Stop)        == State::Configured);
+    static_assert(transition(State::Running, Event::Error)       == State::Fault);
+    static_assert(transition(State::Fault, Event::Reset)         == State::Idle);
 
     std::cout << "ex05_capstone_config_state_machine passed\n";
 }
