@@ -124,8 +124,8 @@ rviz2 ◄─ TF tree, sensor topics
 
 ```
 course/
-├── cpp/        — 8 C++ modules (no ROS2), each with concepts.md, exercises/, answers/, quiz.md
-└── ros2/       — 12 ROS2 modules, each with concepts.md, exercises/, answers/, quiz.md
+├── cpp/        — 8 C++ modules (no ROS2), each with concepts/, quiz/, exercises/, answers/
+└── ros2/       — 12 ROS2 modules, each with concepts/, quiz/, exercises/, answers/
 course/review/  — browser-based flashcard review tool (index.html + cards.js)
 course/interview_prep/nav2_sensor_fusion_pcl/
                 — deep-dive docs and drills for Nav2, sensor fusion, PCL, ROS2 architecture
