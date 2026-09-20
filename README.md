@@ -5,6 +5,10 @@ From-scratch ROS2 implementation of robot autonomy algorithms — sensor fusion,
 > **Branch `ros2-jazzy`** — Active port from ROS Noetic → ROS2 Jazzy + Gazebo Harmonic.
 > For the original ROS Noetic version, see the `main` branch.
 
+## Graduation Project Documentation
+
+The current architecture, verified environment state, team responsibilities, interface contracts, 18-phase roadmap, and acceptance criteria for the thermal visual-pursuit graduation project are documented in [docs/PROJECT_HANDOFF.md](docs/PROJECT_HANDOFF.md).
+
 ---
 
 ## System Requirements
